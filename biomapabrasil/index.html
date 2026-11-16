@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BioMapaBrasil · Da floresta à molécula</title>
+<meta name="description" content="Espécies da Amazônia Legal, seus produtos naturais e toxinas, a bioatividade medida e os fármacos aprovados, com fonte, licença e data de consulta em cada registro. Associação documentada não é eficácia.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="theme-color" content="#070d0b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#efeae0" media="(prefers-color-scheme: light)">
+<link rel="icon" href="icones/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icones/icone-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="fontes/fraunces-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fontes/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+<link rel="modulepreload" href="js/main.js">
+<link rel="modulepreload" href="js/util.js">
+<link rel="modulepreload" href="js/dados.js">
+<link rel="modulepreload" href="js/mapa.js">
+<link rel="modulepreload" href="js/busca.js">
+<link rel="modulepreload" href="js/constelacao.js">
+<link rel="modulepreload" href="js/perfis.js">
+</head>
+<body>
+<a class="pular" href="#principal">Pular para o conteúdo</a>
+<div id="vivo" class="so-leitor" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="barra-rota" aria-hidden="true"><i id="progresso-rota"></i></div>
+<div class="grao" aria-hidden="true"></div>
+
+<!-- Sprite de ícones: traço simples, herdam a cor do texto; nunca são a única informação. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 1 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></symbol>
+    <symbol id="i-planta" viewBox="0 0 24 24"><path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14"/><path d="M5 19c3-4 6-7 10-9"/></symbol>
+    <symbol id="i-animal" viewBox="0 0 24 24"><path d="M5 19c3 3 8 2 9-1s-5-4-4-7 6-3 8-1"/><circle cx="18.2" cy="8.6" r=".9"/></symbol>
+    <symbol id="i-fungo" viewBox="0 0 24 24"><path d="M4 12a8 7 0 0 1 16 0z"/><path d="M10 12v6a2 2 0 0 0 4 0v-6"/></symbol>
+    <symbol id="i-molecula" viewBox="0 0 24 24"><path d="M12 4l6.5 3.8v7.4L12 19l-6.5-3.8V7.8z"/><circle cx="12" cy="4" r="1.5"/><circle cx="18.5" cy="7.8" r="1.5"/><circle cx="18.5" cy="15.2" r="1.5"/><circle cx="12" cy="19" r="1.5"/><circle cx="5.5" cy="15.2" r="1.5"/><circle cx="5.5" cy="7.8" r="1.5"/></symbol>
+    <symbol id="i-acao" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></symbol>
+    <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/></symbol>
+    <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+    <symbol id="i-lua" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></symbol>
+    <symbol id="i-externo" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+    <symbol id="i-lupa" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l5 5M8.5 10.5h4"/></symbol>
+    <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
+    <symbol id="i-lista" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+    <symbol id="i-rio" viewBox="0 0 24 24"><path d="M3 8c3-3 6 3 9 0s6 3 9 0M3 14c3-3 6 3 9 0s6 3 9 0M3 20c3-3 6 3 9 0s6 3 9 0"/></symbol>
+    <symbol id="i-lacuna" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 12h16M12 4v16"/></symbol>
+    <symbol id="i-mais" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-menos" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-alvo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+    <symbol id="i-cubo" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></symbol>
+    <symbol id="i-voltar" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-fechar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></symbol>
+    <symbol id="i-livro" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></symbol>
+    <symbol id="i-dados" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+    <symbol id="i-seta" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></symbol>
+    <symbol id="i-farmaco" viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="8" rx="4" transform="rotate(-35 12 13)"/><path d="M9.5 8.2l5 7.2"/></symbol>
+    <symbol id="i-rede" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><circle cx="5" cy="7" r="1.9"/><circle cx="19" cy="7" r="1.9"/><circle cx="6" cy="18" r="1.9"/><circle cx="18" cy="18" r="1.9"/><path d="M9.8 10.6L6.6 8.2M14.2 10.6l3.2-2.4M10.2 13.8l-2.9 2.8M13.8 13.8l2.9 2.8"/></symbol>
+    <symbol id="i-copiar" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-camadas" viewBox="0 0 24 24"><path d="M12 3L3 8l9 5 9-5z"/><path d="M3 12.5l9 5 9-5M3 17l9 5 9-5"/></symbol>
+    <symbol id="i-pulso" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></symbol>
+    <symbol id="i-grade" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3.5v5.5c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6.5z"/><circle cx="12" cy="11.5" r="2.2"/></symbol>
+    <symbol id="i-galaxia" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4"/><path d="M12 5c4.8 0 8.5 2.7 8.5 6s-3.7 6-8.5 6-8.5-2.7-8.5-6c0-2.1 1.6-3.9 4.1-5"/><circle cx="18" cy="8" r="1.2"/><circle cx="6.5" cy="15.5" r="1.2"/></symbol>
+    <symbol id="i-fluxo" viewBox="0 0 24 24"><path d="M4 6h4c4 0 4 6 8 6h4M4 18h4c4 0 4-6 8-6M4 12h16"/><circle cx="4" cy="6" r="1.5"/><circle cx="4" cy="18" r="1.5"/><circle cx="20" cy="12" r="1.8"/></symbol>
+    <symbol id="i-floresta" viewBox="0 0 24 24"><path d="M12 3l5 6h-3l4 6h-4v6h-4v-6H6l4-6H7z"/><path d="M4 21h16"/></symbol>
+    <symbol id="i-arvore" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 3.5V9M19.4 16.2L14.6 13.5M4.6 16.2l4.8-2.7"/></symbol>
+    <symbol id="i-bacia" viewBox="0 0 24 24"><path d="M12 3c-4 5-7 8.5-7 12.2a7 7 0 0 0 14 0C19 11.5 16 8 12 3z"/><path d="M9.5 14.5c1 1.5 3.5 2 5 .5"/></symbol>
+    <symbol id="i-baixar" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M4 19h16"/></symbol>
+    <symbol id="i-regua" viewBox="0 0 24 24"><path d="M4 16L16 4l4 4L8 20zM13 7l2 2M10 10l2 2M7 13l2 2"/></symbol>
+    <symbol id="i-expandir" viewBox="0 0 24 24"><path d="M15 4h5v5M9 20H4v-5M20 4l-6 6M4 20l6-6"/></symbol>
+  </defs>
+</svg>
+
+<div class="cromo-topo">
+  <header class="topo">
+    <a class="marca" href="#/" aria-label="BioMapaBrasil, início">
+      <svg class="marca-logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="bmb-bg" cx="36%" cy="26%" r="82%"><stop offset="0%" stop-color="#143b2d"/><stop offset="48%" stop-color="#081913"/><stop offset="100%" stop-color="#040a08"/></radialGradient>
+          <radialGradient id="bmb-aura" cx="50%" cy="50%" r="46%"><stop offset="0%" stop-color="#34d399" stop-opacity=".30"/><stop offset="52%" stop-color="#22d3ee" stop-opacity=".11"/><stop offset="100%" stop-color="#040a08" stop-opacity="0"/></radialGradient>
+          <linearGradient id="bmb-sheen" x1=".5" y1="0" x2=".5" y2=".92"><stop offset="0%" stop-color="#eafff6" stop-opacity=".11"/><stop offset="72%" stop-color="#eafff6" stop-opacity=".02"/><stop offset="100%" stop-color="#eafff6" stop-opacity="0"/></linearGradient>
+          <linearGradient id="bmb-rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a7f3d0" stop-opacity=".85"/><stop offset="45%" stop-color="#1f513e" stop-opacity=".45"/><stop offset="100%" stop-color="#fbbf24" stop-opacity=".80"/></linearGradient>
+          <linearGradient id="bmb-leaf" x1=".18" y1=".08" x2=".82" y2=".95"><stop offset="0%" stop-color="#b2f7dc"/><stop offset="38%" stop-color="#34d399"/><stop offset="78%" stop-color="#10855c"/><stop offset="100%" stop-color="#084c35"/></linearGradient>
+          <linearGradient id="bmb-prism" x1=".2" y1="0" x2=".9" y2="1"><stop offset="0%" stop-color="#38d9f5" stop-opacity=".20"/><stop offset="55%" stop-color="#34d399" stop-opacity=".08"/><stop offset="100%" stop-color="#a78bfa" stop-opacity=".16"/></linearGradient>
+          <linearGradient id="bmb-mol" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8af0c8"/><stop offset="50%" stop-color="#38d9f5"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient>
+          <linearGradient id="bmb-rio" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#0891b2"/><stop offset="48%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#e0f2fe"/></linearGradient>
+          <radialGradient id="bmb-seed" cx="35%" cy="32%" r="68%"><stop offset="0%" stop-color="#fffef5"/><stop offset="36%" stop-color="#fde047"/><stop offset="76%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient>
+          <radialGradient id="bmb-shalo" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".82"/><stop offset="52%" stop-color="#34d399" stop-opacity=".32"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></radialGradient>
+          <clipPath id="bmb-lclip"><path d="M32 15.5C16.8 23.1 15.8 40.9 32 48.5Z"/></clipPath>
+        </defs>
+        <path d="M32 1.25C50 1.25 57.4 1.25 60.1 3.9C62.75 6.6 62.75 14 62.75 32C62.75 50 62.75 57.4 60.1 60.1C57.4 62.75 50 62.75 32 62.75C14 62.75 6.6 62.75 3.9 60.1C1.25 57.4 1.25 50 1.25 32C1.25 14 1.25 6.6 3.9 3.9C6.6 1.25 14 1.25 32 1.25Z" fill="url(#bmb-bg)" stroke="url(#bmb-rim)" stroke-width=".95"/>
+        <path d="M32 2.8C48.8 2.8 55.9 2.8 58.5 5.5C61.2 8.1 61.2 14.8 61.2 28Q32 22 2.8 28C2.8 14.8 2.8 8.1 5.5 5.5C8.1 2.8 15.2 2.8 32 2.8Z" fill="url(#bmb-sheen)"/>
+        <circle cx="32" cy="32" r="26.5" fill="url(#bmb-aura)"/>
+        <g class="marca-astro">
+          <circle cx="32" cy="32" r="25.0" fill="none" stroke="#8af0c8" stroke-opacity=".24" stroke-width=".8"/>
+          <circle cx="32" cy="32" r="22.6" fill="none" stroke="#38d9f5" stroke-opacity=".10" stroke-width=".55" stroke-dasharray="1.2 2.4"/>
+          <path d="M32 5.0v3.1M32 55.9v3.1M5.0 32h3.1M55.9 32h3.1" stroke="#a7f3d0" stroke-opacity=".65" stroke-width="1.15" stroke-linecap="round"/>
+        </g>
+        <path d="M8.8 32Q32 35.6 55.2 32" fill="none" stroke="#38d9f5" stroke-opacity=".28" stroke-width=".85" stroke-dasharray="1.6 2.4"/>
+        <path d="M32 15.5C16.8 23.1 15.8 40.9 32 48.5Z" fill="url(#bmb-leaf)"/>
+        <path d="M32 26.8C27.4 25.8 23.8 23.4 20.6 19.8M32 34.8C26.4 33.6 22.2 30.6 19.2 26.6M32 42.6C27.6 41.6 24.0 39.2 21.2 36.0" clip-path="url(#bmb-lclip)" fill="none" stroke="#ecfdf5" stroke-opacity=".46" stroke-width="1.0" stroke-linecap="round"/>
+        <path d="M32 15.5C16.8 23.1 15.8 40.9 32 48.5" fill="none" stroke="#ecfdf5" stroke-opacity=".68" stroke-width=".95" stroke-linecap="round"/>
+        <path d="M32 15.5L45.8 23.75V40.25L32 48.5Z" fill="url(#bmb-prism)"/>
+        <line x1="32" y1="15.5" x2="32" y2="48.5" stroke="#a7f3d0" stroke-opacity=".36" stroke-width=".85"/>
+        <path d="M32 15.5L45.8 23.75V40.25L32 48.5" fill="none" stroke="url(#bmb-mol)" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M34.8 20.4L42.6 25.1M42.6 38.9L34.8 43.6" fill="none" stroke="#e0f2fe" stroke-opacity=".80" stroke-width="1.25" stroke-linecap="round"/>
+        <path d="M45.8 23.75L50.1 21.2" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M18.6 39.5C22.6 39.1 26.0 35.1 30.7 30.9C35.3 26.6 40.2 23.5 45.8 23.0L45.8 24.55C40.8 25.2 36.7 28.1 33.0 33.0C28.6 37.8 23.8 41.2 19.3 40.95C18.5 40.9 18.1 39.9 18.6 39.5Z" fill="#042f2e" fill-opacity=".55" transform="translate(0 .7)"/>
+        <path d="M18.6 39.5C22.6 39.1 26.0 35.1 30.7 30.9C35.3 26.6 40.2 23.5 45.8 23.0L45.8 24.55C40.8 25.2 36.7 28.1 33.0 33.0C28.6 37.8 23.8 41.2 19.3 40.95C18.5 40.9 18.1 39.9 18.6 39.5Z" fill="url(#bmb-rio)"/>
+        <circle cx="32" cy="15.5" r="2.1" fill="#a7f3d0"/>
+        <circle cx="45.8" cy="23.75" r="2.55" fill="#38d9f5"/><circle cx="45.8" cy="23.75" r="1.0" fill="#f0fdfa"/>
+        <circle cx="50.4" cy="21.0" r="1.9" fill="#c4b5fd"/><circle cx="50.4" cy="21.0" r=".7" fill="#f5f3ff"/>
+        <circle cx="45.8" cy="40.25" r="2.45" fill="#6ee7b7"/><circle cx="45.8" cy="40.25" r=".95" fill="#ecfdf5"/>
+        <circle cx="32" cy="48.5" r="2.1" fill="#34d399"/>
+        <g class="marca-nucleo">
+          <circle cx="32" cy="32" r="8.6" fill="url(#bmb-shalo)"/>
+          <circle cx="32" cy="32" r="4.1" fill="url(#bmb-seed)" stroke="#fef9c3" stroke-opacity=".88" stroke-width=".75"/>
+        </g>
+      </svg>
+      <span class="marca-texto">
+        <strong>BioMapaBrasil</strong>
+        <small>Observatório Territorial · Amazonia Works</small>
+      </span>
+    </a>
+
+    <div class="busca" role="search">
+      <label for="q" class="so-leitor">Buscar espécie, molécula ou estado</label>
+      <svg class="ic busca-ic" aria-hidden="true" focusable="false"><use href="#i-busca"/></svg>
+      <input id="q" type="search" placeholder="Espécie, molécula, nome popular ou estado" autocomplete="off" spellcheck="false"
+             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugestoes" aria-haspopup="listbox">
+      <kbd class="atalho-busca" aria-hidden="true" title="A tecla / foca a busca">/</kbd>
+      <ul id="sugestoes" class="sugestoes" role="listbox" aria-label="Sugestões de busca" hidden></ul>
+    </div>
+
+    <div class="topo-acoes">
+      <span id="topo-telemetria" class="telemetria-pill" aria-hidden="true">
+        <i class="semente-viva"></i>
+        <span>AMAZÔNIA LEGAL</span>
+      </span>
+      <button id="idioma" class="btn-icone btn-idioma" type="button" lang="en" aria-label="Switch the interface to English" aria-pressed="false" title="PT / EN">EN</button>
+      <button id="movimento" class="btn-icone" type="button" aria-label="Pausar animações" aria-pressed="false" title="Animações">
+        <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pulso"/></svg>
+      </button>
+      <button id="tema" class="btn-icone" type="button" aria-label="Alternar tema claro e escuro" aria-pressed="false" title="Tema claro ou escuro">
+        <svg class="ic" aria-hidden="true" focusable="false"><use id="tema-ic" href="#i-sol"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <nav class="menu" aria-label="Seções do site">
+    <a href="#/" data-vista="mapa"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-mapa"/></svg>Mapa</a>
+    <a href="#/especies" data-vista="especies"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-planta"/></svg>Espécies</a>
+    <a href="#/moleculas" data-vista="moleculas"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-molecula"/></svg>Moléculas</a>
+    <a href="#/galaxia" data-vista="galaxia"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-galaxia"/></svg>Espaço químico</a>
+    <a href="#/fluxo" data-vista="fluxo"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-fluxo"/></svg>Fluxos</a>
+    <a href="#/floresta" data-vista="floresta"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-floresta"/></svg>Estratos</a>
+    <a href="#/filoquimica" data-vista="filoquimica"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arvore"/></svg>Quimiotaxonomia</a>
+    <a href="#/lacunas" data-vista="lacunas"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-lacuna"/></svg>Lacunas</a>
+    <a href="#/fontes" data-vista="fontes"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-livro"/></svg>Fontes e método</a>
+    <a href="#/dados" data-vista="dados"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-dados"/></svg>Dados abertos</a>
+    <a href="#/sobre" data-vista="sobre"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-info"/></svg>Sobre</a>
+    <a href="#/sobre" class="menu-origem"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-voltar"/></svg>Amazonia Works</a>
+  </nav>
+</div>
+
+<main id="principal" tabindex="-1">
+  <!-- Vista do mapa: mapa e painel da trilha território → espécie → molécula → ação biológica -->
+  <section id="vista-mapa" class="vista-mapa" aria-label="Mapa e painel">
+    <div class="mapa-coluna">
+      <div id="mapa" class="mapa" aria-label="Mapa do Brasil por estado"></div>
+    </div>
+    <aside id="painel" class="painel" aria-labelledby="painel-titulo">
+      <nav id="trilha" class="trilha" aria-label="Trilha: território, espécie, molécula, ação biológica"></nav>
+      <div id="painel-corpo" class="painel-corpo" tabindex="-1" aria-live="off"></div>
+    </aside>
+  </section>
+
+  <!-- Demais vistas: tabelas, visualizações, fontes e método, dados abertos, sobre -->
+  <section id="vista-pagina" class="vista-pagina" hidden></section>
+</main>
+
+<footer class="rodape">
+  <div class="rodape-grade">
+    <div class="rodape-marca">
+      <p class="eyebrow">BIOMAPABRASIL · AMAZONIA WORKS</p>
+      <p>Código sob GNU AGPL-3.0. Nome e marca reservados. Cada registro traz a licença e a data de consulta da fonte.</p>
+      <p><a href="#/fontes">Fontes e método</a> · <a href="#/dados">Dados abertos</a> · <a href="api/docs">API</a> · <a href="#/sobre">Amazonia Works</a></p>
+      <p id="rodape-versao" class="rodape-versao"></p>
+    </div>
+    <p class="rodape-aviso">Os registros vêm de literatura e bases científicas públicas. <strong>Associação documentada não é eficácia.</strong> O conteúdo não substitui orientação médica.</p>
+  </div>
+</footer>
+
+<noscript>
+  <div class="aviso-noscript">
+    <p>O mapa e os perfis exigem JavaScript. Os dados estão em CSV:
+       <a href="dados/tabelas/taxa.csv">táxons</a>, <a href="dados/tabelas/moleculas.csv">moléculas</a>,
+       <a href="dados/tabelas/afirmacoes.csv">afirmações</a>.</p>
+  </div>
+</noscript>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

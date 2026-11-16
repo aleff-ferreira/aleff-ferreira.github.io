@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">BioMapaBrasil: da floresta à molécula, com fonte em cada número</title>
+  <desc id="desc">Observatório territorial de espécies da Amazônia Legal, seus compostos, toxinas e bioatividade medida, com fonte, licença e nível de evidência em cada registro.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a2018"/>
+      <stop offset="55%" stop-color="#06120e"/>
+      <stop offset="100%" stop-color="#040a09"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="78%" cy="24%" r="48%">
+      <stop offset="0%" stop-color="#34d399" stop-opacity=".22"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="84%" cy="76%" r="42%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#glow1)"/>
+  <rect width="1280" height="640" fill="url(#glow2)"/>
+  <text x="64" y="88" font-family="monospace" font-size="15" font-weight="700" fill="#6ee7b7">AMAZONIA WORKS · INFRAESTRUTURA CIENTÍFICA ABERTA</text>
+  <text x="64" y="142" font-family="Georgia, serif" font-size="44" font-weight="700" fill="#f2faf6">BioMapaBrasil</text>
+  <text x="64" y="236" font-family="Georgia, serif" font-size="54" font-weight="700" fill="#f4fbf8">Da floresta à molécula,</text>
+  <text x="64" y="302" font-family="Georgia, serif" font-size="54" font-weight="700" fill="#52e0a8">com fonte em cada número.</text>
+  <text x="64" y="368" font-family="system-ui, sans-serif" font-size="22" fill="#cbe0d7">Espécies da Amazônia Legal, compostos relatados, toxinas, bioatividade medida e fármacos aprovados.</text>
+  <text x="64" y="406" font-family="system-ui, sans-serif" font-size="21" fill="#9bc0b2">Cada registro traz fonte, licença, data de consulta e nível de evidência. Em português e inglês.</text>
+  <line x1="64" y1="564" x2="1216" y2="564" stroke="#6ee7b7" stroke-opacity=".28"/>
+  <text x="64" y="598" font-family="monospace" font-size="16" fill="#94b8aa">aleff-ferreira.github.io/biomapabrasil · código AGPL-3.0 · dados CC BY 4.0 · Associação documentada não é eficácia</text>
+</svg>
