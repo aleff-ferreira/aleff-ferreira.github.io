@@ -333,7 +333,7 @@ async function rotaBacia(baciaId) {
   estado.uf = null; estado.taxonItem = null; estado.molItem = null; estado.resumoAcao = null;
   mostrarVista('mapa'); marcarMenu('mapa');
   estado.mapa.selecionar(null); estado.mapa.camada('lacunas', false); mapaOverview();
-  mapaOverview(); estado.mapa.focarAmazonia();
+  estado.mapa.focarAmazonia();
   if (el.telemetria) el.telemetria.textContent = tr('SUB-BACIA HIDROGRÁFICA');
   carregando();
   try {
@@ -421,7 +421,7 @@ function rotear() {
   try {
     if (caminho === '/' || caminho === '') return rotaVisaoGeral();
     if ((m = caminho.match(/^\/uf\/([A-Za-z]{2})$/))) return rotaUF(m[1].toUpperCase());
-    if ((m = caminho.match(/^\/bacia\/([a-z0-9_]+)$/i))) return rotaBacia(m[1].toLowerCase());
+    if ((m = caminho.match(/^\/bacia\/([a-z0-9_:%-]+)$/i))) { const bId = decodeURIComponent(m[1]).toUpperCase(); return rotaBacia(bId.startsWith('BAC:') ? bId : `BAC:${bId}`); }
     if ((m = caminho.match(/^\/especie\/(\d+)(?:\/molecula\/(\d+))?$/))) return rotaEspecie(m[1], m[2]);
     if ((m = caminho.match(/^\/molecula\/(\d+)$/))) return rotaMolecula(m[1]);
     if (caminho === '/lacunas') return rotaLacunas();
