@@ -151,10 +151,16 @@ function mapaTaxon(pack) {
     nota: consulta ? tr('Contagens por estado. Consulta de {data}.', { data: fmtData(consulta.data) }) : '' });
 }
 
-function mostrarVista(tipo) {
+function mostrarVista(tipo, molecula = false) {
+  document.documentElement.toggleAttribute('data-cena-molecular', molecula);
+  el.vistaMapa.querySelector('.mapa-coluna').hidden = molecula;
+  el.vistaMapa.classList.toggle('vista-molecula', molecula);
+  if (molecula && !document.getElementById('css-molecula')) {
+    document.head.append(Object.assign(document.createElement('link'), { id: 'css-molecula', rel: 'stylesheet', href: 'css/molecula.css' }));
+  }
   el.vistaMapa.hidden = tipo !== 'mapa';
   el.vistaPagina.hidden = tipo !== 'pagina';
-  if (tipo === 'mapa') requestAnimationFrame(() => estado.mapa?.refrescar());
+  if (tipo === 'mapa' && !molecula) requestAnimationFrame(() => estado.mapa?.refrescar());
 }
 function marcarMenu(vista) {
   el.menu.forEach((a) => { if (a.dataset.vista === vista) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
@@ -239,7 +245,7 @@ const ufsAL = () => new Set(estado.ufs.filter((u) => u.al).map((u) => u.s));
 async function rotaEspecie(gbif, molId) {
   const meu = ++estado.token;
   const item = estado.indice.porGbif.get(Number(gbif));
-  mostrarVista('mapa'); marcarMenu('mapa');
+  mostrarVista('mapa', !!molId); marcarMenu(molId ? 'moleculas' : 'mapa');
   estado.mapa.camada('lacunas', false);
   estado.taxonItem = item || null; estado.molItem = null; estado.resumoAcao = null;
   estado.mapa.selecionar(estado.uf);
@@ -248,8 +254,10 @@ async function rotaEspecie(gbif, molId) {
   try {
     const pack = await dados.taxon(gbif);
     if (meu !== estado.token) return;
-    mapaTaxon(pack);
-    if (pack.recorte.dentro && !semPredominio(pack.recorte.predominio)) estado.mapa.focarAmazonia(); else estado.mapa.reiniciar();
+    if (!molId) {
+      mapaTaxon(pack);
+      if (pack.recorte.dentro && !semPredominio(pack.recorte.predominio)) estado.mapa.focarAmazonia(); else estado.mapa.reiniciar();
+    }
     if (el.telemetria) el.telemetria.textContent = `GBIF ${pack.gbif} · ${pack.nome.toUpperCase().slice(0, 22)}`;
     if (molId) {
       const molPack = await dados.molecula(molId);
@@ -297,8 +305,7 @@ async function rotaEspecie(gbif, molId) {
 async function rotaMolecula(id) {
   const meu = ++estado.token;
   estado.taxonItem = null; estado.molItem = null; estado.resumoAcao = null;
-  mostrarVista('mapa'); marcarMenu('mapa');
-  estado.mapa.camada('lacunas', false); mapaOverview(); estado.mapa.selecionar(estado.uf); estado.mapa.reiniciar();
+  mostrarVista('mapa', true); marcarMenu('moleculas');
   renderTrilha(2); carregando();
   try {
     const pack = await dados.molecula(id);
@@ -490,6 +497,14 @@ function escreverVersao() {
   { data: fmtData(estado.manifesto.gerado_em), t: fmtInt(c.taxons_no_recorte), m: fmtInt(c.moleculas_inchikey ?? c.moleculas) });
 }
 async function iniciar() {
+  const primeiraMol = location.hash.match(/\/molecula\/(\d+)(?:$|[/?])/);
+  if (primeiraMol) {
+    mostrarVista('mapa', true);
+    dados.molecula(Number(primeiraMol[1])).then(pack => {
+      const e = pack.estruturas_3d?.[0];
+      if (e) return Promise.all([import('./viz/estrutura3d.js'), dados.estrutura3d(e.arquivo, e.sha256)]);
+    }).catch(() => {}); // A rota apresenta o estado de erro da requisição principal.
+  }
   iniciarTema();
   iniciarMovimento();
   const btnLang = $('#idioma');

@@ -3,7 +3,7 @@
 // também. Estratégia pensada para 400 kbps: dados JSON "usa o cache e atualiza em segundo plano";
 // imagens, estruturas e fontes "cache primeiro". Os índices de topo e o dicionário de tradução sempre tentam a rede antes
 // (versão nova dos dados).
-const VERSAO = 'bmb-v21';
+const VERSAO = 'bmb-v22';
 const ESQUELETO = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icones/icone.svg',
   'js/main.js', 'js/util.js', 'js/dados.js', 'js/mapa.js', 'js/busca.js', 'js/constelacao.js', 'js/perfis.js',
@@ -34,6 +34,30 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;                       // nada de terceiros: o site não os usa
+
+  const intervalo = req.headers.get('Range')?.match(/^bytes=(\d+)-(\d+)$/);
+  if (intervalo && /\/dados\/estruturas3d_ensembles\/[^/]+\.zip$/.test(url.pathname)) {
+    e.respondWith((async () => {
+      const cache = await caches.open(VERSAO + '-membros3d');
+      // A chave inclui a assinatura e a posição do membro. A Cache API aceita a cópia completa de cada membro.
+      const chave = new URL(url);
+      chave.searchParams.set('bytes', intervalo[1] + '-' + intervalo[2]);
+      const salvo = await cache.match(chave);
+      if (salvo) return new Response(salvo.body, { status: 206, headers: salvo.headers });
+      const r = await fetch(req);
+      if (!r.ok) return r;
+      const corpo = await r.arrayBuffer();
+      const inicio = Number(intervalo[1]), fim = Number(intervalo[2]);
+      const parte = r.status === 206 ? corpo : corpo.slice(inicio, fim + 1);
+      if (parte.byteLength !== fim - inicio + 1) return Response.error();
+      const headers = { 'Content-Type': 'application/octet-stream',
+        'Content-Range': r.headers.get('Content-Range') || `bytes ${inicio}-${fim}/${corpo.byteLength}` };
+      try { await cache.put(chave, new Response(parte, { headers })); await aparar(cache); } catch { /* quota do dispositivo */ }
+      return new Response(parte, { status: 206, headers });
+    })());
+    return;
+  }
+  if (req.headers.has('Range')) return;
 
   if (req.mode === 'navigate') {                                    // página: rede primeiro, esqueleto se estiver sem rede
     e.respondWith(fetch(req).catch(() => caches.match('index.html')));

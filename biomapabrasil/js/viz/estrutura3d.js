@@ -2,8 +2,10 @@
 // Visualizador 3D de estruturas (WebGL2, superfície de potencial eletrostático, medidas e exportação SDF):
 //   * estruturas experimentais (`experimental`, wwPDB e COD): coordenadas depositadas e arquivo SDF (V2000/V3000);
 //   * modelos preditos (`predicao_computacional`, AlphaFold DB e ESMFold): fita Cα com pLDDT por resíduo e pontes dissulfeto;
-//   * confôrmeros calculados (`conformero_calculado`, RDKit ETKDGv3 com MMFF94s ou UFF): geometria rotulada como calculada e arquivo SDF.
-import { esc, fmtDec, fmtData, icone, anunciar, tr, trDado, trPartes } from '../util.js';
+//   * confôrmeros calculados (`conformero_calculado`, RDKit, método registrado por fonte): geometria rotulada como calculada e arquivo SDF.
+import { esc, fmtDec, fmtFixo, fmtData, icone, anunciar, tr, trDado, trPartes } from '../util.js';
+import { desenharSprites, prepararSprites } from './material_canvas.js';
+import { lerConformero, medida, detalhesItem, rotuloAtomo, rotuloItem, torcoes } from './inspecao3d.js';
 import * as dados from '../dados.js';
 import { movimentoPausado } from '../constelacao.js';
 import { garantirEstilosObservatorio } from './estilos_obs.js';
@@ -24,11 +26,11 @@ const CIP_DECODE = { 0: '', 1: 'R', 2: 'S', 3: 'r', 4: 's', 5: '?' };
 
 // Paleta CPK [R, G, B em 0..1, raio bola-bastão Å, raio de van der Waals Å, massa u]
 const TABELA_EL = {
-  H: [[0.92, 0.95, 0.98], 0.25, 1.20, 1.008],
+  H: [[0.90, 0.92, 0.90], 0.28, 1.20, 1.008],
   B: [[0.98, 0.68, 0.72], 0.36, 1.92, 10.81],
-  C: [[0.24, 0.84, 0.63], 0.38, 1.70, 12.011],
-  N: [[0.34, 0.64, 0.98], 0.36, 1.55, 14.007],
-  O: [[0.97, 0.36, 0.38], 0.35, 1.52, 15.999],
+  C: [[0.31, 0.35, 0.38], 0.46, 1.70, 12.011],
+  N: [[0.20, 0.42, 0.87], 0.42, 1.55, 14.007],
+  O: [[0.86, 0.17, 0.20], 0.42, 1.52, 15.999],
   F: [[0.62, 0.92, 0.24], 0.33, 1.47, 18.998],
   Na: [[0.66, 0.45, 0.96], 0.46, 2.27, 22.99],
   Mg: [[0.32, 0.88, 0.36], 0.44, 1.73, 24.305],
@@ -108,7 +110,8 @@ function corFarmacoforoRgb(at, claro = false) {
 }
 
 function temaClaro() {
-  return document.documentElement.dataset.tema === 'claro';
+  const raiz = document.documentElement;
+  return raiz.dataset.tema === 'claro' && !raiz.hasAttribute('data-cena-molecular');
 }
 
 // ═══════════════════════ Descompressor RFC-1951 (DEFLATE bruto) + Codec BM32 ═══════════════════════
@@ -287,7 +290,7 @@ export async function decodificarBM32Z(b64z) {
       x: dx, y: dy, z: dz,
       ox: cx + dx, oy: cy + dy, oz: cz + dz,
       q: fchg,
-      g: gq / 100.0,
+      g: gq === 0 ? null : gq / 100.0,
       cip: CIP_DECODE[cflags & 0x07] || '',
       aro: (cflags & 0x08) !== 0,
       hbd: (cflags & 0x10) !== 0,
@@ -317,7 +320,7 @@ export async function decodificarBM32Z(b64z) {
     const aro = (bbits & 0x08) !== 0;
     const ring = (bbits & 0x40) !== 0;
     ligacoes[bi] = {
-      a: a1, b: a2, ko, aro,
+      idx: bi, a: a1, b: a2, ko, aro,
       ez: ezC === 1 ? 'E' : (ezC === 2 ? 'Z' : ''),
       ring,
     };
@@ -332,7 +335,8 @@ export async function decodificarBM32Z(b64z) {
   return { chiralFlag, centroide: [cx, cy, cz], atomos, ligacoes, adj };
 }
 
-export async function normalizarModelo3D(raw) {
+export async function normalizarModelo3D(raw, indice = 0) {
+  if (raw.fmt === 'ensemble-sdf-v1') return lerConformero(raw, indice);
   let tabAtomos = null;
   if (raw.b64z) {
     tabAtomos = await decodificarBM32Z(raw.b64z);
@@ -341,7 +345,7 @@ export async function normalizarModelo3D(raw) {
     const atomos = raw.a.map((a, idx) => ({
       idx, zNum: ELEMENTOS.indexOf(a[0]) > 0 ? ELEMENTOS.indexOf(a[0]) : 6,
       s: a[0], x: a[1], y: a[2], z: a[3], ox: a[1], oy: a[2], oz: a[3],
-      q: a[4] || 0, g: 0, cip: mapaQ.get(idx) || '', aro: false,
+      q: a[4] ?? null, g: null, cip: mapaQ.get(idx) || '', aro: false,
       hbd: a[0] === 'O' || a[0] === 'N', hba: a[0] === 'O' || a[0] === 'N', bf: 0, polarH: false,
     }));
     const adj = Array.from({ length: atomos.length }, () => []);
@@ -350,7 +354,8 @@ export async function normalizarModelo3D(raw) {
       adj[a2]?.push({ v: a1, bi });
       if (atomos[a1]?.s === 'H' && (atomos[a2]?.s === 'O' || atomos[a2]?.s === 'N' || atomos[a2]?.s === 'S')) atomos[a1].polarH = true;
       if (atomos[a2]?.s === 'H' && (atomos[a1]?.s === 'O' || atomos[a1]?.s === 'N' || atomos[a1]?.s === 'S')) atomos[a2].polarH = true;
-      return { a: a1, b: a2, ko: ord === 4 ? 1 : (ord || 1), aro: ord === 4, ez: '', ring: ord === 4 };
+      if (ord === 4) { atomos[a1].aro = true; atomos[a2].aro = true; }
+      return { idx: bi, a: a1, b: a2, ko: ord === 4 ? 1 : (ord || 1), aro: ord === 4, ez: '', ring: ord === 4 };
     });
     tabAtomos = { chiralFlag: mapaQ.size ? 1 : 0, centroide: [0, 0, 0], atomos, ligacoes, adj };
   }
@@ -366,6 +371,7 @@ export async function normalizarModelo3D(raw) {
 
 // ═══════════════════════ Exportador BIOVIA MDL SDF 3D (V2000 / V3000) ═══════════════════════
 export function gerarSDF3DCliente(modelo, info = {}, molMeta = {}) {
+  if (modelo?.sdf) return modelo.sdf;
   if (!modelo?.temAtomos) throw new Error('Modelo sem tabela atômica para SDF 3D');
   const { atomos, ligacoes, chiralFlag } = modelo;
   const r = modelo.raw || {};
@@ -388,12 +394,12 @@ export function gerarSDF3DCliente(modelo, info = {}, molMeta = {}) {
     const cargas = [];
     for (let i = 0; i < nAt; i++) {
       const at = atomos[i];
-      if (at.q !== 0) cargas.push([i + 1, at.q]);
+      if (at.q) cargas.push([i + 1, at.q]);
       linhas.push(`${padF(at.ox)}${padF(at.oy)}${padF(at.oz)} ${at.s.padEnd(3, ' ')} 0  0  0  0  0  0  0  0  0  0  0  0`);
     }
     for (let bi = 0; bi < nBd; bi++) {
       const bd = ligacoes[bi];
-      const ko = (bd.ko >= 1 && bd.ko <= 3) ? bd.ko : 1;
+      const ko = r.a && bd.aro ? 4 : (bd.ko >= 1 && bd.ko <= 3 ? bd.ko : 1);
       linhas.push(`${padI(bd.a + 1)}${padI(bd.b + 1)}${padI(ko)}  0  0  0  0`);
     }
     for (let c = 0; c < cargas.length; c += 8) {
@@ -408,14 +414,14 @@ export function gerarSDF3DCliente(modelo, info = {}, molMeta = {}) {
     linhas.push('M  V30 BEGIN ATOM');
     for (let i = 0; i < nAt; i++) {
       const at = atomos[i];
-      const chg = at.q !== 0 ? ` CHG=${at.q}` : '';
+      const chg = at.q ? ` CHG=${at.q}` : '';
       linhas.push(`M  V30 ${i + 1} ${at.s} ${at.ox.toFixed(4)} ${at.oy.toFixed(4)} ${at.oz.toFixed(4)} 0${chg}`);
     }
     linhas.push('M  V30 END ATOM');
     linhas.push('M  V30 BEGIN BOND');
     for (let bi = 0; bi < nBd; bi++) {
       const bd = ligacoes[bi];
-      const ko = (bd.ko >= 1 && bd.ko <= 3) ? bd.ko : 1;
+      const ko = r.a && bd.aro ? 4 : (bd.ko >= 1 && bd.ko <= 3 ? bd.ko : 1);
       linhas.push(`M  V30 ${bi + 1} ${ko} ${bd.a + 1} ${bd.b + 1}`);
     }
     linhas.push('M  V30 END BOND');
@@ -790,14 +796,41 @@ void main() {
   v_center = c;
   v_radius = i_radius;
   v_color = i_color;
-  float pad = u_ortho > 0.5 ? 1.04 : 1.28;
-  vec3 q = c + vec3(a_quad * i_radius * pad, u_ortho > 0.5 ? i_radius : i_radius * 0.95);
+  float z = c.z + i_radius;
+  vec2 xy = u_ortho > .5 ? c.xy : c.xy * z / c.z;
+  vec3 q = vec3(xy + a_quad * i_radius * 1.32, z);
   v_rayPt = q;
   gl_Position = u_proj * vec4(q, 1.0);
 }`;
 
+const MATERIAL = `
+const float PI = 3.14159265;
+vec3 luz(vec3 n, vec3 v, vec3 l, vec3 base, float rough, vec3 rad) {
+  vec3 h = normalize(v + l);
+  float nv = max(dot(n,v), 0.001), nl = max(dot(n,l), 0.0);
+  float nh = max(dot(n,h), 0.0), vh = max(dot(v,h), 0.0);
+  float a2 = pow(rough, 4.0);
+  float d = a2 / (PI * pow(nh * nh * (a2 - 1.0) + 1.0, 2.0));
+  float k = (rough + 1.0) * (rough + 1.0) / 8.0;
+  float g = nv / (nv * (1.0-k) + k) * nl / (nl * (1.0-k) + k);
+  vec3 f = vec3(0.045) + vec3(0.955) * pow(1.0-vh, 5.0);
+  return ((1.0-f) * base / PI + d * g * f / max(0.001, 4.0 * nv * nl)) * rad * nl;
+}
+vec3 material(vec3 n, vec3 v, vec3 cor, float rough) {
+  vec3 base = pow(cor, vec3(2.2));
+  vec3 rgb = base * mix(vec3(.11,.16,.17), vec3(.44,.52,.54), n.y * .5 + .5);
+  rgb += luz(n,v,normalize(vec3(-.48,.76,.65)),base,rough,vec3(3.8,3.63,3.42));
+  rgb += luz(n,v,normalize(vec3(.88,.25,-.36)),base,rough,vec3(1.35,2.4,2.55));
+  rgb += luz(n,v,normalize(vec3(.2,-.55,.72)),base,.58,vec3(.52,.64,.68));
+  vec3 r = reflect(-v,n);
+  float strip = smoothstep(.67,.98, dot(r,normalize(vec3(-.62,.68,.32))));
+  rgb += vec3(.17,.20,.21) * strip;
+  return pow(rgb / (vec3(.82) + rgb * .40), vec3(1.0/2.2));
+}`;
+
 const FS_ESFERA = `#version 300 es
 precision highp float;
+${MATERIAL}
 in vec3 v_center;
 in vec3 v_rayPt;
 in float v_radius;
@@ -832,24 +865,11 @@ void main() {
   vec4 clip = u_proj * vec4(hit, 1.0);
   gl_FragDepth = 0.5 * (clip.z / clip.w) + 0.5;
 
-  vec3 L1 = normalize(vec3(0.52, 0.68, 0.52));
-  vec3 L2 = normalize(vec3(-0.62, -0.28, 0.73));
-  float diff1 = max(dot(N, L1), 0.0);
-  float diff2 = max(dot(N, L2), 0.0) * 0.28;
-  vec3 H1 = normalize(L1 + V);
-  float spec = pow(max(dot(N, H1), 0.0), 46.0) * 0.52;
-  float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.1);
-  float hemi = 0.30 + 0.14 * N.y;
-
-  vec3 base = v_color.rgb;
-  float selGlow = v_color.a > 1.5 ? 0.35 : 0.0;
-  vec3 col = base * (hemi + diff1 * 0.72 + diff2) + vec3(1.0, 0.99, 0.96) * spec + (base * 0.55 + vec3(0.18, 0.42, 0.38)) * fresnel * 0.38;
-  if (selGlow > 0.0) {
-    col = mix(col, vec3(0.25, 0.98, 0.78), 0.32 + 0.45 * fresnel);
-  }
+  vec3 col = material(N, V, v_color.rgb, 0.34);
+  if (v_color.a > 1.5) col = mix(col, vec3(.66,1.0,.83), .25 * pow(1.0-max(dot(N,V),0.0), 2.0));
   float distCam = -hit.z;
   float fog = clamp((distCam - u_fogNear) / max(0.5, u_fogFar - u_fogNear), 0.0, 0.52);
-  col = mix(col, u_fogColor, fog);
+  col = mix(col, u_fogColor, fog * 0.15);
   fragColor = vec4(col, 1.0);
 }`;
 
@@ -876,23 +896,20 @@ void main() {
   v_radius = i_radius;
   v_colA = i_colA; v_colB = i_colB;
 
-  vec2 d2 = B.xy - A.xy;
-  float l2 = length(d2);
-  vec2 dir2 = l2 > 1e-4 ? d2 / l2 : vec2(1.0, 0.0);
-  vec2 perp2 = vec2(-dir2.y, dir2.x);
-
-  float t = a_quad.y * 0.5 + 0.5;
-  vec3 base = mix(A, B, t);
-  float ext = i_radius * 1.42;
-  vec2 offXY = dir2 * ((a_quad.y > 0.0 ? 1.0 : -1.0) * ext) + perp2 * (a_quad.x * ext);
-  float frontZ = max(A.z, B.z) + i_radius * 1.15;
-  vec3 q = vec3(base.xy + offXY, frontZ);
+  vec4 ca = u_proj * vec4(A,1.0), cb = u_proj * vec4(B,1.0);
+  vec2 a = ca.xy / ca.w, b = cb.xy / cb.w;
+  vec2 radius = vec2(u_proj[0][0],u_proj[1][1]) * i_radius * 1.28 / max(.01,min(ca.w,cb.w)-i_radius);
+  vec2 ndc = mix(min(a,b)-radius, max(a,b)+radius, a_quad*.5+.5);
+  float z = max(A.z,B.z)+i_radius;
+  vec4 center = u_proj * vec4(0.,0.,z,1.);
+  vec3 q = vec3(ndc * center.w / vec2(u_proj[0][0],u_proj[1][1]), z);
   v_rayPt = q;
-  gl_Position = u_proj * vec4(q, 1.0);
+  gl_Position = vec4(ndc*center.w,center.z,center.w);
 }`;
 
 const FS_CAPSULA = `#version 300 es
 precision highp float;
+${MATERIAL}
 in vec3 v_A;
 in vec3 v_B;
 in vec3 v_rayPt;
@@ -964,18 +981,10 @@ void main() {
   gl_FragDepth = 0.5 * (clip.z / clip.w) + 0.5;
 
   vec3 base = mix(v_colA, v_colB, smoothstep(0.44, 0.56, hFrac));
-  vec3 L1 = normalize(vec3(0.52, 0.68, 0.52));
-  vec3 L2 = normalize(vec3(-0.62, -0.28, 0.73));
-  float diff1 = max(dot(N, L1), 0.0);
-  float diff2 = max(dot(N, L2), 0.0) * 0.26;
-  vec3 H1 = normalize(L1 + V);
-  float spec = pow(max(dot(N, H1), 0.0), 38.0) * 0.36;
-  float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.8);
-  vec3 col = base * (0.31 + 0.12 * N.y + diff1 * 0.70 + diff2) + vec3(1.0) * spec + base * fresnel * 0.25;
-
+  vec3 col = material(N, V, base, 0.43);
   float distCam = -hit.z;
   float fog = clamp((distCam - u_fogNear) / max(0.5, u_fogFar - u_fogNear), 0.0, 0.52);
-  col = mix(col, u_fogColor, fog);
+  col = mix(col, u_fogColor, fog * 0.15);
   fragColor = vec4(col, 1.0);
 }`;
 
@@ -1020,7 +1029,7 @@ void main() {
   vec3 col = v_col * (0.36 + diff * 0.66) + vec3(1.0) * spec + vec3(0.45, 0.92, 0.85) * fres * 0.28;
   float distCam = -v_posEye.z;
   float fog = clamp((distCam - u_fogNear) / max(0.5, u_fogFar - u_fogNear), 0.0, 0.45);
-  col = mix(col, u_fogColor, fog);
+  col = mix(col, u_fogColor, fog * 0.15);
   float a = u_alpha < 0.99 ? clamp(u_alpha * (0.55 + 0.85 * fres), 0.16, 0.88) : 1.0;
   fragColor = vec4(col, a);
 }`;
@@ -1054,7 +1063,7 @@ function compilarProg(gl, vsSrc, fsSrc) {
 function criarMotorGL2(canvas) {
   let gl = null;
   try {
-    gl = canvas.getContext('webgl2', { antialias: true, alpha: true, depth: true, preserveDrawingBuffer: true });
+    gl = canvas.getContext('webgl2', { antialias: true, alpha: true, depth: true, preserveDrawingBuffer: false });
   } catch { gl = null; }
   if (!gl) return null;
 
@@ -1175,30 +1184,10 @@ function interpCatmull(p0, p1, p2, p3, t) {
 }
 
 function calcularMedidaGeometrica(pts) {
-  if (pts.length === 2) {
-    const d = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y, pts[1].z - pts[0].z);
-    return { tipo: tr('Distância'), valor: `${fmtDec(d, 2)} Å` };
-  }
-  if (pts.length === 3) {
-    const ux = pts[0].x - pts[1].x, uy = pts[0].y - pts[1].y, uz = pts[0].z - pts[1].z;
-    const vx = pts[2].x - pts[1].x, vy = pts[2].y - pts[1].y, vz = pts[2].z - pts[1].z;
-    const ul = Math.hypot(ux, uy, uz) || 1, vl = Math.hypot(vx, vy, vz) || 1;
-    const ang = Math.acos(Math.max(-1, Math.min(1, (ux * vx + uy * vy + uz * vz) / (ul * vl)))) * (180 / Math.PI);
-    return { tipo: tr('Ângulo'), valor: `${fmtDec(ang, 1)}°` };
-  }
-  if (pts.length === 4) {
-    const sub = (a, b) => [a.x - b.x, a.y - b.y, a.z - b.z];
-    const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-    const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-    const b1 = sub(pts[1], pts[0]), b2 = sub(pts[2], pts[1]), b3 = sub(pts[3], pts[2]);
-    const b2l = Math.hypot(...b2) || 1;
-    const b2n = [b2[0] / b2l, b2[1] / b2l, b2[2] / b2l];
-    const n1 = cross(b1, b2), n2 = cross(b2, b3);
-    const m1 = cross(n1, b2n);
-    const diedro = Math.atan2(dot(m1, n2), dot(n1, n2)) * (180 / Math.PI);
-    return { tipo: tr('Diedro'), valor: `${fmtDec(diedro, 1)}°` };
-  }
-  return null;
+  const valor = medida(pts);
+  if (valor == null) return null;
+  const n = pts.length;
+  return { tipo: tr(['', '', 'Distância', 'Ângulo', 'Diedro'][n]), valor: fmtFixo(valor, n === 2 ? 3 : 2) + (n === 2 ? ' Å' : '°') };
 }
 
 // ═══════════════════════ Componente Interativo Principal ═══════════════════════
@@ -1215,15 +1204,21 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
 
   let rx = 0.32, ry = -0.48, zoom = 1.0, panX = 0, panY = 0;
   let rBase = 5.0;
-  let girando = !movimentoPausado();
+  let girando = false, abertura = null, ultimoQuadro = 0, pesoFrame = 16.7, quadrosLentos = 0;
+  let enquadramento = null, reconstituir = 0, ultimaInteracao = 0;
+  let simplificar = false, sprites = null, instancias = null;
+  let ativo = true, visivel = true, qualidade = Math.min(devicePixelRatio || 1, matchMedia('(pointer: coarse)').matches ? 1.5 : 2);
+  let versaoCarga = 0, indiceConf = 0, modelos = [], itemAtual = '', pontosLigacao = [];
+  const fixados = new Map();
+  const vida = new AbortController();
   let orto = false;
   let expandido = false;
   let modoRepr = 'bolas';        // 'bolas' | 'superficie' | 'vdw' | 'bastoes' | 'fita'
   let modoCor = 'cpk';           // 'cpk' | 'mep' | 'farmaco' | 'bfactor'
   let modoH = 'todos';           // 'todos' | 'polares' | 'nenhum'
-  let verAneis = true;
-  let verPontesH = true;
-  let verQuiral = true;
+  let verAneis = false;
+  let verPontesH = false;
+  let verQuiral = false;
   let modoRegua = false;
   let selecionados = [];
   let hoverItem = null;
@@ -1241,23 +1236,45 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
 
   container.innerHTML = `
     <div class="lab3d-bloco" data-lab3d-raiz>
-      <div class="lab3d-barra">
-        <div style="display:flex;align-items:center;gap:.42rem;flex-wrap:wrap">
-          <span data-lab3d-badge class="badge ind">${tr('Carregando…')}</span>
-          ${selHtml}
+      <div class="mol-campo">
+        <div class="lab3d-palco" data-lab3d-palco>
+          <canvas class="lab3d-sombra" aria-hidden="true"></canvas>
+          <canvas class="lab3d-gl" aria-hidden="true"></canvas>
+          <canvas class="lab3d-hud" tabindex="0" aria-label="${tr('Estrutura 3D. Setas giram, + e − aproximam, colchetes percorrem átomos e ligações, Enter fixa.')}"></canvas>
+          <div class="lab3d-calibre-barra" data-calibre-barra hidden></div>
+          <div class="lab3d-inspetor" data-inspetor hidden></div>
         </div>
-        <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-          <button type="button" class="lab3d-btn-sdf" data-3d-sdf hidden>${icone('baixar')}<span data-sdf-rotulo>${tr('Baixar SDF')}</span></button>
-          <div class="obs-controles-flutuantes" role="group" aria-label="${tr('Câmera')}">
-            <button type="button" data-3d="girar" aria-pressed="${girando}" title="${tr('Rotação contínua')}">${tr('Girar')}</button>
-            <button type="button" data-3d="orto" aria-pressed="false" title="${tr('Projeção em perspectiva ou ortográfica')}">${tr('Perspectiva')}</button>
-            <button type="button" data-3d="reset" title="${tr('Alinhar aos eixos principais de inércia')}">${tr('Alinhar')}</button>
-            <button type="button" data-3d="foto" title="${tr('Salvar imagem PNG')}">${icone('camera')}<span class="so-leitor">${tr('Salvar imagem PNG')}</span></button>
-            <button type="button" data-3d="expandir" aria-pressed="false" title="${tr('Ampliar o visualizador')}">${icone('expandir')}<span class="so-leitor">${tr('Ampliar o visualizador')}</span></button>
-          </div>
+        <div class="mol-elementos" data-elementos></div>
+        <div class="mol-camera" role="group" aria-label="${tr('Câmera')}">
+          <span class="mol-escala" title="${tr('Escala no plano central da molécula')}"><i data-escala></i>1 Å</span>
+          ${[['menos','menos','Afastar'],['mais','mais','Aproximar'],['reset','alvo','Alinhar'],['expandir','expandir','Ampliar o visualizador']].map(([ac,icon,label]) =>
+            `<button type="button" data-3d="${ac}" title="${tr(label)}" aria-label="${tr(label)}">${icone(icon)}</button>`).join('')}
         </div>
       </div>
-
+      <div class="mol-instrumentos">
+        <div class="mol-comandos">
+          <div>${selHtml}<label data-conf-label hidden>${tr('Confôrmero')} <select data-conf></select></label>
+            <span data-lab3d-badge class="badge ind">${tr('Carregando…')}</span></div>
+          <div><button type="button" class="lab3d-chip" data-3d="regua" aria-pressed="false">${icone('regua')}${tr('Medir')}</button>
+          <button type="button" class="lab3d-btn-sdf" data-3d-sdf hidden>${icone('baixar')}<span data-sdf-rotulo>${tr('Baixar SDF')}</span></button>
+          <button type="button" class="lab3d-chip" data-xyz hidden>${tr('Baixar XYZ')}</button></div>
+        </div>
+        <p data-render-status role="status" hidden></p>
+        <div data-inspecao hidden>
+          <div class="mol-inspecao-topo"><label>${tr('Inspecionar')} <select data-item></select></label>
+            <button type="button" class="lab3d-chip" data-fixar>${tr('Fixar detalhe')}</button>
+            <button type="button" class="lab3d-chip" data-ponto hidden>${tr('Adicionar à régua')}</button></div>
+          <div data-propriedades aria-live="polite"></div><div data-fixados></div>
+          <details data-comparacao hidden><summary>${tr('Comparar torções')}</summary>
+            <label>${tr('Átomos da torção')} <select data-torcao></select></label><div data-angulos></div>
+          </details>
+        </div>
+        <details class="mol-ajustes"><summary>${tr('Representação e fontes')}</summary>
+          <div class="lab3d-grupo">
+            <button type="button" class="lab3d-chip" data-3d="girar" aria-pressed="false">${tr('Girar')}</button>
+            <button type="button" class="lab3d-chip" data-3d="orto" aria-pressed="false">${tr('Perspectiva')}</button>
+            <button type="button" class="lab3d-chip" data-3d="foto">${icone('camera')}${tr('Salvar imagem PNG')}</button>
+          </div>
       <div class="lab3d-subbarra" aria-label="${tr('Representação e cores')}">
         <div class="lab3d-grupo" role="group" aria-label="${tr('Representação')}" data-grupo-repr>
           <span class="lab3d-rotulo">${tr('Representação')}</span>
@@ -1279,27 +1296,37 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
           <button type="button" class="lab3d-chip" data-camada="pontesh" aria-pressed="true" title="${tr('Ligações de hidrogênio intramoleculares')}">${tr('Ligações de H')}</button>
           <button type="button" class="lab3d-chip" data-camada="quiral" aria-pressed="true" title="${tr('Descritores CIP (R)/(S) e (E)/(Z)')}">${tr('Estereodescritores')}</button>
           <button type="button" class="lab3d-chip" data-3d="hidrogenios" title="${tr('Hidrogênios exibidos')}">${tr('Todos os H')}</button>
-          <button type="button" class="lab3d-chip" data-3d="regua" aria-pressed="false" title="${tr('Medir distância (2 átomos), ângulo (3) ou diedro (4)')}">${icone('regua')}${tr('Medir')}</button>
+
         </div>
       </div>
 
-      <div class="lab3d-palco" data-lab3d-palco>
-        <canvas class="lab3d-gl" aria-hidden="true"></canvas>
-        <canvas class="lab3d-hud" tabindex="0" role="img" aria-label="${tr('Estrutura 3D. Arrastar gira; Shift e arrastar deslocam; a roda do mouse aproxima; as setas giram.')}"></canvas>
-        <div class="lab3d-calibre-barra" data-calibre-barra hidden></div>
-        <div class="lab3d-inspetor" data-inspetor hidden></div>
-      </div>
-
       <div class="lab3d-telemetria" data-telemetria></div>
-      <div class="lab3d-rodape" data-rodape></div>
+      <div class="lab3d-rodape" data-rodape></div></details></div>
     </div>`;
 
   const raizBloco = container.querySelector('[data-lab3d-raiz]');
   const palco = container.querySelector('[data-lab3d-palco]');
   const cvGl = container.querySelector('canvas.lab3d-gl');
   const cvHud = container.querySelector('canvas.lab3d-hud');
-  const ctxHud = cvHud.getContext('2d');
-  const motorGL = criarMotorGL2(cvGl);
+  let motorGL = criarMotorGL2(cvGl);
+  const perfilInicial = () => {
+    if (!motorGL) return;
+    const gl = motorGL.gl, ext = gl.getExtension('WEBGL_debug_renderer_info');
+    simplificar = !!ext && /swiftshader|llvmpipe|software/i.test(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));
+  };
+  perfilInicial();
+  const ctxHud = cvHud.getContext('2d', { willReadFrequently: simplificar });
+  let sombraEm = -Infinity;
+  const cvSombra = container.querySelector('.lab3d-sombra');
+  const sombra = cvSombra.getContext('2d');
+  const penumbra = document.createElement('canvas');
+  penumbra.width = penumbra.height = 64;
+  const pincel = penumbra.getContext('2d');
+  const degradado = pincel.createRadialGradient(32, 32, 0, 32, 32, 32);
+  degradado.addColorStop(0, 'rgba(2,10,12,.21)');
+  degradado.addColorStop(.46, 'rgba(1,9,11,.088)');
+  degradado.addColorStop(1, 'rgba(0,7,9,0)');
+  pincel.fillStyle = degradado; pincel.fillRect(0, 0, 64, 64);
   if (!motorGL) cvGl.hidden = true;
 
   const badge = container.querySelector('[data-lab3d-badge]');
@@ -1312,6 +1339,19 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   const telemetria = container.querySelector('[data-telemetria]');
   const rodape = container.querySelector('[data-rodape]');
 
+  const q = (sel) => container.querySelector(sel);
+  const fonteAtual = () => {
+    const info = opcoes3d[idxAtual];
+    return info.natureza === 'experimental' ? tr('Coordenadas medidas') + ' · ' + info.fonte + ' ' + info.acesso
+      : tr('Coordenadas calculadas') + ' · ' + (info.metodo || info.fonte) + (modelo?.raw.rdkit ? ' · RDKit ' + modelo.raw.rdkit : '');
+  };
+  function avisarModoSimples() {
+    const status = q('[data-render-status]');
+    status.hidden = false;
+    status.textContent = tr('WebGL indisponível. Projeção simplificada das coordenadas 3D.');
+  }
+  if (!motorGL) avisarModoSimples();
+
   function atomoVisivel(at) {
     if (at.s !== 'H') return true;
     if (modoH === 'todos') return true;
@@ -1323,12 +1363,12 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     if (modoCor === 'mep') return corEletrostaticaRgb((at.g || 0) + (at.q || 0) * 0.55, claro);
     if (modoCor === 'farmaco') return corFarmacoforoRgb(at, claro);
     if (modoCor === 'bfactor') return ehPredicao ? corPLDDTRgb(at.bf || 75) : corBFactorRgb(at.bf || 20, bMin, bMax);
-    return infoEl(at.s, claro)[0];
+    return infoEl(at.s)[0];
   }
 
   function atualizarBuffersGL() {
-    if (!motorGL || !modelo) return;
-    const { gl } = motorGL;
+    if (!modelo) return;
+    const gl = motorGL?.gl;
     const claro = temaClaro();
     const info = opcoes3d[idxAtual] || {};
     const ehPred = info.natureza === 'predicao_computacional';
@@ -1392,7 +1432,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
           );
         }
       }
-      motorGL.nMalha = 0;
+      if (motorGL) motorGL.nMalha = 0;
     } else if (modelo.temAtomos) {
       const { atomos, ligacoes } = modelo;
       const bfs = atomos.map((a) => a.bf || 0);
@@ -1414,7 +1454,8 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
         for (const bd of ligacoes) {
           const a1 = atomos[bd.a], a2 = atomos[bd.b];
           if (!a1 || !a2 || !atomoVisivel(a1) || !atomoVisivel(a2)) continue;
-          const c1 = coresAt[bd.a], c2 = coresAt[bd.b];
+          const inspecionada = hoverItem?.chave === 'bd:' + bd.idx;
+          const c1 = inspecionada ? [.63,.85,.69] : coresAt[bd.a], c2 = inspecionada ? [.63,.85,.69] : coresAt[bd.b];
           const dx = a2.x - a1.x, dy = a2.y - a1.y, dz = a2.z - a1.z;
           const dl = Math.hypot(dx, dy, dz) || 1;
           const ux = dx / dl, uy = dy / dl, uz = dz / dl;
@@ -1426,7 +1467,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
           const pl = Math.hypot(px, py, pz) || 1;
           px /= pl; py /= pl; pz /= pl;
 
-          const rLig = ehBastao ? 0.20 : 0.105;
+          const rLig = ehBastao ? 0.20 : 0.119;
           if (bd.aro && !ehBastao) {
             const off = 0.115;
             pushCap(a1.x + px * off, a1.y + py * off, a1.z + pz * off, a2.x + px * off, a2.y + py * off, a2.z + pz * off, 0.078, c1, c2);
@@ -1496,7 +1537,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       }
 
       // Superfície Molecular Translúcida MEP
-      if (modoRepr === 'superficie') {
+      if (modoRepr === 'superficie' && motorGL) {
         const chaveM = `${idxAtual}:${modoH === 'nenhum' ? 'noH' : 'H'}`;
         if (!malhaCache.has(chaveM)) {
           malhaCache.set(chaveM, construirSuperficieMEP(modelo, modoH === 'nenhum'));
@@ -1517,13 +1558,15 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
           gl.bufferData(gl.ARRAY_BUFFER, inter, gl.STATIC_DRAW);
           motorGL.nMalha = malha.nVerts;
         } else {
-          motorGL.nMalha = 0;
+          if (motorGL) motorGL.nMalha = 0;
         }
       } else {
-        motorGL.nMalha = 0;
+        if (motorGL) motorGL.nMalha = 0;
       }
     }
 
+    instancias = [esferas, capsulas]; sprites = null; cenaSuja = false;
+    if (!motorGL) return;
     gl.bindBuffer(gl.ARRAY_BUFFER, motorGL.bufEsf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(esferas), gl.DYNAMIC_DRAW);
     motorGL.nEsf = esferas.length / 8;
@@ -1547,10 +1590,33 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       : `<span>${tr('Selecione 2 átomos (distância, Å), 3 (ângulo, °) ou 4 (diedro, °).')}${rotPts ? ` <span class="mono">${esc(rotPts)}</span>` : ''}</span>${selecionados.length ? ` <button type="button" class="lab3d-chip" data-limpar-regua style="padding:.1rem .38rem">${tr('Limpar')}</button>` : ''}`;
   }
 
-  function desenhar() {
+  function desenhar(agora = performance.now()) {
     raf = 0;
-    if (!cvHud.isConnected || !modelo) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (!cvHud.isConnected || !modelo || !ativo || !visivel || document.hidden || !palco.clientWidth) return;
+    const dt = agora - ultimoQuadro;
+    ultimoQuadro = agora;
+    if (dt > 0 && dt < 250 && (arrastando || abertura || girando)) {
+      pesoFrame = pesoFrame * .85 + dt * .15;
+      quadrosLentos = pesoFrame > 24 ? quadrosLentos + 1 : 0;
+      if (quadrosLentos >= 10 && qualidade > .75) {
+        simplificar = true; qualidade = Math.max(.7, qualidade * .76);
+        quadrosLentos = 0;
+      }
+    }
+    if (movimentoPausado()) { abertura = null; girando = false; }
+    if (abertura) {
+      const t = Math.min(1, (agora - abertura.inicio) / 1050);
+      const resto = (1 - t) ** 3;
+      ry = desc3d.ryIdeal - .30 * resto; rx = desc3d.rxIdeal + .09 * resto; zoom = 1 - .09 * resto;
+      if (t === 1) abertura = null;
+    }
+    const interagindo = !!(arrastando || girando || abertura || agora - ultimaInteracao < 180);
+    const usarSprites = modelo.temAtomos && (!motorGL || (simplificar && interagindo)) && modoRepr !== 'superficie';
+    const dpr = interagindo ? Math.min(qualidade, usarSprites ? 1.5 : 2) : Math.min(devicePixelRatio || 1, 2);
+    if (motorGL && usarSprites && interagindo && !arrastando && !girando && !abertura) {
+      clearTimeout(reconstituir);
+      reconstituir = setTimeout(() => pedirQuadro(), 200);
+    }
     const w = Math.max(220, palco.clientWidth || 340);
     const h = Math.max(220, palco.clientHeight || 365);
     const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
@@ -1564,14 +1630,29 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
 
     const claro = temaClaro();
     const fov = 0.62; // ~35.5°
-    const camDist = (rBase / Math.tan(fov * 0.5)) / zoom;
     const aspect = w / h;
-    const halfH = rBase / zoom;
+    if (!enquadramento || enquadramento.aspect !== aspect) {
+      let altura = rBase / Math.min(1, aspect);
+      if (modelo.temAtomos) {
+        let limite = 0;
+        for (const at of modelo.atomos) {
+          const [x,y,z] = rotacionarPt(at.x,at.y,at.z,desc3d.rxIdeal,desc3d.ryIdeal);
+          const raio = infoEl(at.s)[1] + .16;
+          limite = Math.max(limite, Math.max((Math.abs(x)+raio)/aspect, Math.abs(y)+raio) + z * Math.tan(fov*.5));
+        }
+        altura = Math.max(1.8, limite * 1.17, altura * .60);
+      }
+      enquadramento = { aspect, altura };
+    }
+    const halfH = enquadramento.altura / zoom;
+    const camDist = halfH / Math.tan(fov * .5);
     const near = Math.max(0.25, camDist - rBase * 2.8);
     const far = camDist + rBase * 3.2;
 
-    if (motorGL) {
-      if (cenaSuja) atualizarBuffersGL();
+    if (cenaSuja) atualizarBuffersGL();
+    cvGl.hidden = !motorGL || usarSprites;
+    palco.dataset.motor = usarSprites ? 'atlas' : motorGL ? 'webgl2' : 'canvas';
+    if (motorGL && !usarSprites) {
       const { gl } = motorGL;
       gl.viewport(0, 0, pw, ph);
       gl.clearColor(0, 0, 0, 0);
@@ -1648,21 +1729,24 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       };
     };
 
-    // Sutil auréola de pedestal abaixo da molécula (ancoragem espacial)
-    const chao = projTela(0, -rBase * 0.86, 0);
-    const rSombra = Math.max(24, Math.min(w * 0.38, rBase * 0.72 * chao.escPx));
-    const gradChao = ctxHud.createRadialGradient(chao.sx, chao.sy, rSombra * 0.05, chao.sx, chao.sy, rSombra);
-    gradChao.addColorStop(0, claro ? 'rgba(15,23,42,0.10)' : 'rgba(52,211,153,0.09)');
-    gradChao.addColorStop(1, 'rgba(0,0,0,0)');
-    ctxHud.save();
-    ctxHud.translate(chao.sx, chao.sy);
-    ctxHud.scale(1, 0.28);
-    ctxHud.fillStyle = gradChao;
-    ctxHud.beginPath();
-    ctxHud.arc(0, 0, rSombra, 0, Math.PI * 2);
-    ctxHud.fill();
-    ctxHud.restore();
-
+    const pxAngstrom = (h * .5) / halfH;
+    q('[data-escala]').style.width = pxAngstrom + 'px';
+    // Penumbra por átomo num plano fixo. A rotação muda a projeção da sombra, nunca as coordenadas.
+    const sw = Math.max(1, Math.round(w / 3)), sh = Math.max(1, Math.round(h / 3));
+    if (cvSombra.width !== sw || cvSombra.height !== sh) { cvSombra.width = sw; cvSombra.height = sh; }
+    if (!usarSprites || !interagindo || agora - sombraEm >= 115) {
+      sombraEm = agora;
+      sombra.clearRect(0, 0, sw, sh);
+      for (const at of modelo.atomos) {
+        if (at.s === 'H') continue;
+        const [x, y, z] = rotacionarPt(at.x, at.y, at.z, rx, ry);
+        const largura = (2.15 + (y / rBase + 1) * .85) * pxAngstrom / 3;
+        const sx = sw / 2 + (x + panX + .16 * y) * pxAngstrom / 3;
+        const sy = sh * .88 + (z * .16 - panY) * pxAngstrom / 3;
+        sombra.drawImage(penumbra, sx - largura, sy - largura * .26, largura * 2, largura * .52);
+      }
+    }
+    pontosLigacao = [];
     projecoesTela = [];
     if (modoRepr === 'fita' && modelo.temCadeia) {
       const ca = modelo.ca;
@@ -1706,33 +1790,9 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       const bMin = Math.min(...bfs), bMax = Math.max(...bfs);
       const ehPred = opcoes3d[idxAtual]?.natureza === 'predicao_computacional';
 
-      // Fallback Canvas2D completo quando WebGL2 não está disponível (ex.: ambiente headless)
-      if (!motorGL) {
-        const pts2d = atomos.map((a) => ({ a, ...projTela(a.x, a.y, a.z) }));
-        const prims = [];
-        if (modoRepr !== 'vdw') {
-          for (const bd of ligacoes) {
-            if (!atomoVisivel(atomos[bd.a]) || !atomoVisivel(atomos[bd.b])) continue;
-            prims.push({ t: 'b', z: (pts2d[bd.a].z + pts2d[bd.b].z) * 0.5, p1: pts2d[bd.a], p2: pts2d[bd.b], bd });
-          }
-        }
-        pts2d.forEach((p, idx) => {
-          if (atomoVisivel(p.a)) prims.push({ t: 'a', z: p.z, p, idx });
-        });
-        prims.sort((u, v) => u.z - v.z);
-        for (const it of prims) {
-          if (it.t === 'b') {
-            ctxHud.strokeStyle = claro ? 'rgba(51,65,85,0.78)' : 'rgba(167,243,208,0.72)';
-            ctxHud.lineWidth = Math.max(1.6, 0.14 * it.p1.escPx);
-            ctxHud.beginPath(); ctxHud.moveTo(it.p1.sx, it.p1.sy); ctxHud.lineTo(it.p2.sx, it.p2.sy); ctxHud.stroke();
-          } else {
-            const [, rB, rV] = infoEl(it.p.a.s, claro);
-            const rPx = Math.max(2.8, (modoRepr === 'vdw' ? rV * 0.9 : rB) * it.p.escPx);
-            const rgb = corAtomoRgb(it.p.a, claro, bMin, bMax, ehPred);
-            ctxHud.fillStyle = rgbCss(rgb);
-            ctxHud.beginPath(); ctxHud.arc(it.p.sx, it.p.sy, rPx, 0, Math.PI * 2); ctxHud.fill();
-          }
-        }
+      if (usarSprites && instancias) {
+        sprites ||= prepararSprites(...instancias);
+        desenharSprites(ctxHud, sprites, projTela);
       }
 
       for (let i = 0; i < atomos.length; i++) {
@@ -1742,17 +1802,10 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
         const [, rB, rV] = infoEl(at.s, claro);
         const rMundo = modoRepr === 'vdw' ? rV * 0.92 : rB;
         const rPx = Math.max(6, rMundo * p.escPx);
-        const partes = [`${at.s}${i + 1}`];
-        if (at.cip && at.cip !== '?') partes.push(`CIP (${at.cip})`);
-        if (at.aro) partes.push(tr('aromático'));
-        if (at.q) partes.push(tr('carga {q}', { q: at.q > 0 ? `+${at.q}` : at.q }));
-        if (at.g) partes.push(`δ ${at.g >= 0 ? '+' : ''}${fmtDec(at.g, 2)} e`);
-        if (at.bf > 0) partes.push(`B ${fmtDec(at.bf, 1)} Å²`);
         projecoesTela.push({
           chave: `at:${i}`, sx: p.sx, sy: p.sy, z: p.z, rPx,
           x: at.x, y: at.y, z3: at.z,
           rotulo: `${at.s}${i + 1}`,
-          detalhe: partes.join(' · '),
         });
 
         if (verQuiral && at.cip && at.cip !== '?') {
@@ -1771,6 +1824,13 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
         }
       }
 
+      if (modoRepr !== 'vdw') {
+        modelo.ligacoes.forEach((bd, bi) => {
+          const a = atomos[bd.a], b = atomos[bd.b];
+          if (!atomoVisivel(a) || !atomoVisivel(b)) return;
+          pontosLigacao.push({ chave: 'bd:' + bi, a: projTela(a.x,a.y,a.z), b: projTela(b.x,b.y,b.z) });
+        });
+      }
       // Rótulos E/Z nas ligações duplas estereogênicas
       if (verQuiral) {
         for (const bd of ligacoes) {
@@ -1819,15 +1879,15 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       });
     }
 
-    if (girando && !movimentoPausado() && !arrastando) {
-      ry += 0.0068;
+    if ((abertura || girando) && !movimentoPausado() && !arrastando) {
+      if (girando) ry += Math.min(dt, 40) * .00012;
       raf = requestAnimationFrame(desenhar);
     }
   }
 
   function pedirQuadro(sujarCena = false) {
     if (sujarCena) cenaSuja = true;
-    if (!raf && cvHud.isConnected) raf = requestAnimationFrame(desenhar);
+    if (!raf && ativo && visivel && !document.hidden && cvHud.isConnected) raf = requestAnimationFrame(desenhar);
   }
 
   function calcularRaioCena(mod) {
@@ -1893,13 +1953,25 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       badge.textContent = `${tr('Predita')} · ${info.acesso}${plddt ? ` (pLDDT ${fmtDec(plddt)})` : ''}`;
       texto = tr('Modelo predito por computador ({metodo}), não determinado por experimento.', { metodo: info.metodo || info.fonte });
     } else {
-      const eKcal = info.energia_kcal_mol ?? modelo.raw?.e_kcal;
+      const eKcal = modelo.raw?.conformeros?.[indiceConf].energia ?? info.energia_kcal_mol ?? modelo.raw?.e_kcal;
       badge.className = 'badge ind';
       badge.textContent = tr('Confôrmero calculado');
       texto = tr('Confôrmero calculado ({metodo}), não determinado por experimento.', { metodo: info.metodo || modelo.raw?.met || 'RDKit ETKDGv3' })
         + (eKcal != null ? ` ${tr('Energia: {e} kcal/mol.', { e: fmtDec(eKcal) })}` : '');
     }
-    rodape.innerHTML = `${legendaCor}<div>${esc(texto)} ${txtFonte}</div>`;
+    const limites = modelo.raw.fmt === 'ensemble-sdf-v1' ? tr('Energia de ponto único MMFF94s. A ordem só compara as poses desta molécula. Solvente e ambiente de ligação ausentes.') : '';
+    rodape.innerHTML = `${legendaCor}<div>${esc(texto)} ${txtFonte} ${esc(limites)}</div>`;
+    if (modelo.raw.referencias) {
+      const p = document.createElement('p');
+      p.textContent = 'RDKit ' + modelo.raw.rdkit + ' · seed ' + modelo.raw.seed + ' · ';
+      for (const doi of modelo.raw.referencias) {
+        const a = document.createElement('a');
+        a.href = 'https://doi.org/' + encodeURI(doi);
+        a.textContent = doi.includes('5b00654') ? 'ETKDG' : doi.includes('0c00025') ? 'ETKDGv3' : 'MMFF94';
+        p.append(a, ' ');
+      }
+      rodape.append(p);
+    }
   }
 
   function sincronizarBotoesBarra() {
@@ -1916,10 +1988,124 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     if (bH) bH.textContent = tr(modoH === 'todos' ? 'Todos os H' : (modoH === 'polares' ? 'H polares' : 'Sem H'));
   }
 
+  function limitesDoModelo() {
+    const info = opcoes3d[idxAtual];
+    if (info.fonte === 'cod') return tr('Átomos pesados medidos por cristalografia. Hidrogênios adicionados por RDKit. Medidas envolvendo H incluem posições inferidas.');
+    if (info.natureza === 'experimental') return tr('Coordenadas do modelo depositado. A resolução pertence à entrada experimental. A origem de cada hidrogênio pode variar.');
+    if (modelo.raw.a) return tr('Arquivo legado. Cargas e atribuições ausentes aparecem sem registro. A estereoquímica anotada no modelo pode ser inferida da geometria.');
+    return tr('Modelo de uma molécula isolada. Esta pose não determina sua conformação em solução.');
+  }
+  function listaPropriedades(chave) {
+    const linhas = detalhesItem(modelo, chave);
+    const dl = (items) => `<dl class="mol-valores">${items.map(([k,v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
+    return dl(linhas.slice(0, 5)) + (linhas.length > 5 ? `<details class="mol-vizinhos"><summary>${tr('Distâncias e ângulos locais')}</summary>${dl(linhas.slice(5))}</details>` : '');
+  }
+  function inspecionar(chave, tooltip = false) {
+    if (!modelo?.temAtomos || !chave || chave.startsWith('ca:')) return;
+    itemAtual = chave;
+    q('[data-item]').value = chave;
+    const titulo = rotuloItem(modelo, chave);
+    const conf = tr('Confôrmero') + ' ' + (indiceConf + 1);
+    q('[data-propriedades]').innerHTML = listaPropriedades(chave) +
+      `<p class="mol-nota">${esc(fonteAtual())} · ${esc(conf)}. ${esc(tr('Cargas formais, aromaticidade e estereoquímica derivam do grafo. Distâncias e ângulos são calculados nas coordenadas exibidas.'))} ${esc(limitesDoModelo())}</p>`;
+    inspetor.hidden = !tooltip;
+    if (tooltip) {
+      const props = detalhesItem(modelo, chave).slice(0, 4);
+      inspetor.innerHTML = `<strong>${esc(titulo)}</strong><span>${props.map(([k, v]) => esc(k) + ' ' + esc(v)).join(' · ')}</span>`;
+    }
+    hoverItem = { chave };
+    pedirQuadro(true);
+  }
+  function atualizarFixados() {
+    q('[data-fixados]').innerHTML = [...fixados].map(([k, v]) =>
+      `<details class="mol-fixado" open><summary>${esc(v.titulo)}</summary>${v.html}<button type="button" class="lab3d-chip" data-soltar="${esc(k)}">${tr('Desafixar')}</button></details>`).join('');
+  }
+  function fixar() {
+    if (!itemAtual || !modelo?.temAtomos) return;
+    const chave = `${idxAtual}/${indiceConf}/${itemAtual}`;
+    fixados.set(chave, { titulo: `${rotuloItem(modelo, itemAtual)} · ${tr('Confôrmero')} ${indiceConf + 1} · ${opcoes3d[idxAtual].acesso}`,
+      html: q('[data-propriedades]').innerHTML });
+    atualizarFixados();
+  }
+  function configurarItens() {
+    const painel = q('[data-inspecao]');
+    painel.hidden = !modelo.temAtomos;
+    if (painel.hidden) return;
+    const opcoes = (tipo, itens) => itens.map((_, i) => {
+      const chave = tipo + ':' + i;
+      return `<option value="${chave}">${esc(rotuloItem(modelo, chave))}</option>`;
+    }).join('');
+    q('[data-item]').innerHTML = `<optgroup label="${tr('Átomos')}">${opcoes('at', modelo.atomos)}</optgroup>
+      <optgroup label="${tr('Ligações')}">${opcoes('bd', modelo.ligacoes)}</optgroup>`;
+    inspecionar(itemAtual || 'at:0');
+    const sel = q('[data-torcao]');
+    const grupos = torcoes(modelo);
+    sel.replaceChildren(...grupos.map((g) => new Option(g.map((i) => rotuloAtomo(modelo,i)).join('–'), g.join(','))));
+    q('[data-comparacao]').hidden = modelos.length < 2 || !grupos.length;
+    atualizarTorcoes();
+  }
+  function atualizarTorcoes() {
+    const sel = q('[data-torcao]');
+    if (!sel.value || modelos.length < 2) return;
+    const ids = sel.value.split(',').map(Number);
+    const valores = modelos.map((m) => medida(ids.map((i) => m.atomos[i])));
+    const grau = (v) => v == null ? '—' : fmtFixo(v, 2) + '°';
+    q('[data-angulos]').innerHTML = `<table><thead><tr><th>${tr('Confôrmero')}</th><th>${tr('Diedro')}</th><th>Δ · ${tr('Confôrmero')} 1</th></tr></thead>
+      <tbody>${valores.map((v,i) => `<tr><th scope="row">${i+1}</th><td>${grau(v)}</td><td>${grau(v == null || valores[0] == null ? null : (v - valores[0] + 540) % 360 - 180)}</td></tr>`).join('')}</tbody></table>
+      <p class="mol-nota">${esc(tr('Ângulos calculados para os mesmos quatro átomos, na ordem indicada.'))} ${esc(fonteAtual())}.</p>`;
+  }
+  function pontoDaRegua(i) {
+    const at = modelo.atomos[i];
+    const chave = 'at:' + i, n = selecionados.findIndex((p) => p.chave === chave);
+    if (n >= 0) selecionados.splice(n, 1);
+    else {
+      if (selecionados.length === 4) selecionados.shift();
+      selecionados.push({ chave, rotulo: rotuloAtomo(modelo, i), x: at.x, y: at.y, z: at.z });
+    }
+    if (selecionados.length === 4 && modelos.length > 1) {
+      const ids = selecionados.map((p) => +p.chave.slice(3));
+      const sel = q('[data-torcao]'), value = ids.join(',');
+      if (![...sel.options].some(o => o.value === value)) sel.add(new Option(selecionados.map(p => p.rotulo).join('–'), value));
+      sel.value = value;
+      q('[data-comparacao]').hidden = false;
+      atualizarTorcoes();
+    }
+    atualizarCalibreUI(); pedirQuadro(true);
+  }
+  function configurarLegenda() {
+    q('[data-elementos]').replaceChildren();
+    if (!modelo.temAtomos || modoCor !== 'cpk') return;
+    for (const sim of new Set(modelo.atomos.map(a => a.s))) {
+      const el = document.createElement('span'), ponto = document.createElement('i');
+      ponto.style.background = rgbCss(infoEl(sim)[0]);
+      el.append(ponto, sim); q('[data-elementos]').append(el);
+    }
+  }
+  function trocarConformero(i) {
+    if (!modelos[i]) return;
+    indiceConf = i;
+    modelo = modelos[i]; enquadramento = null;
+    aneisPi = detectarAneisPi(modelo);
+    pontesH = detectarPontesH(modelo);
+    malhaCache.clear();
+    selecionados = selecionados.map(p => {
+      const at = modelo.atomos[Number(p.chave.slice(3))];
+      return { ...p, x: at.x, y: at.y, z: at.z };
+    });
+    atualizarCalibreUI();
+    inspecionar(itemAtual);
+    atualizarTelemetriaERodape(opcoes3d[idxAtual]);
+    configurarLegenda();
+    pedirQuadro(true);
+  }
+
   async function carregarIndice(i) {
-    idxAtual = i;
+    const carga = ++versaoCarga;
+    idxAtual = i; indiceConf = 0; itemAtual = ''; modelo = null; modelos = []; abertura = null;
     const info = opcoes3d[i];
-    if (!info?.arquivo) return;
+    btnSdf.hidden = true; q('[data-xyz]').hidden = true; q('[data-inspecao]').hidden = true; q('[data-conf-label]').hidden = true;
+    cvGl.style.visibility = cvHud.style.visibility = cvSombra.style.visibility = 'hidden';
+    malhaCache.clear();
     badge.className = 'badge ind';
     badge.textContent = tr('Carregando…');
     selecionados = [];
@@ -1927,20 +2113,40 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     atualizarCalibreUI();
 
     try {
-      const bruto = await dados.estrutura3d(info.arquivo);
-      modelo = await normalizarModelo3D(bruto);
+      const bruto = await dados.estrutura3d(info.arquivo, info.sha256);
+      if (bruto.fmt === 'ensemble-sdf-v1' && (bruto.ik !== molMeta.inchikey || bruto.id !== molMeta.id)) throw Error('Identidade divergente');
+      const lista = await Promise.all((bruto.conformeros || [null]).map((_, n) => normalizarModelo3D(bruto, n)));
+      if (carga !== versaoCarga || !container.isConnected) return;
+      if (info.grafo_validado) {
+        const g = info.grafo_validado;
+        const m = lista[0];
+        if (g.atomos.length !== m.atomos.length || g.ligacoes.length !== m.ligacoes.length) throw Error('Grafo incompatível');
+        m.atomos.forEach((at, n) => { [at.q, at.aro, at.cip] = g.atomos[n]; });
+        m.ligacoes.forEach((bd, n) => { [bd.aro, bd.ez, bd.ring] = g.ligacoes[n]; });
+      }
+      modelos = lista;
+      modelo = modelos[0]; enquadramento = null;
+      if (!modelo || !(modelo.temAtomos || modelo.temCadeia)) throw Error('Sem coordenadas');
+      cvGl.style.visibility = cvHud.style.visibility = cvSombra.style.visibility = '';
+      if (motorGL) q('[data-render-status]').hidden = true; else avisarModoSimples();
+      q('[data-xyz]').hidden = !modelo.temAtomos;
+      q('[data-conf-label]').hidden = modelos.length < 2;
+      q('[data-conf]').replaceChildren(...modelos.map((_, j) => new Option((j + 1) + ' / ' + modelos.length, j)));
       aneisPi = detectarAneisPi(modelo);
       pontesH = detectarPontesH(modelo);
       desc3d = calcularDescritoresEOrientacao(modelo);
-      rBase = calcularRaioCena(modelo);
+      rBase = Math.max(...modelos.map(calcularRaioCena));
       rx = desc3d.rxIdeal;
       ry = desc3d.ryIdeal;
       zoom = 1.0; panX = 0; panY = 0;
+      abertura = movimentoPausado() ? null : { inicio: performance.now() };
+      const origem = container.closest('[data-est-bloco]')?.querySelector('[data-cena-origem]');
+      if (origem) origem.textContent = tr(info.natureza === 'experimental' ? 'Estrutura experimental' : info.natureza === 'predicao_computacional' ? 'Modelo predito' : 'Confôrmero calculado');
 
       // Configura modos disponíveis conforme o tipo estrutural (atômico vs cadeia proteica)
       btnFita.hidden = !modelo.temCadeia;
       container.querySelectorAll('[data-repr="bolas"],[data-repr="superficie"],[data-repr="vdw"],[data-repr="bastoes"]').forEach((b) => {
-        b.hidden = !modelo.temAtomos;
+        b.hidden = !modelo.temAtomos || (!motorGL && b.dataset.repr === 'superficie');
       });
       const temBfac = modelo.temCadeia || modelo.atomos.some((a) => a.bf > 0);
       btnBfac.hidden = !temBfac;
@@ -1970,10 +2176,19 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
         btnSdf.hidden = true;
       }
 
+      configurarItens();
+      configurarLegenda();
       sincronizarBotoesBarra();
       atualizarTelemetriaERodape(info);
+      container.dataset.pronto = '1';
       pedirQuadro(true);
     } catch (e) {
+      if (carga !== versaoCarga || !container.isConnected) return;
+      modelo = null; modelos = [];
+      delete container.dataset.pronto;
+      q('[data-render-status]').hidden = false;
+      q('[data-render-status]').textContent = tr('Estrutura 3D indisponível');
+      if (opcoes3d.length === 1) container.dispatchEvent(new Event('bmb:falha3d', { bubbles: true }));
       badge.className = 'badge fora';
       console.error(e);
       badge.textContent = tr('Estrutura 3D indisponível');
@@ -1984,19 +2199,31 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   function localizarItemTela(clientX, clientY) {
     const rect = cvHud.getBoundingClientRect();
     const x = clientX - rect.left, y = clientY - rect.top;
-    let melhor = null, melhorScore = Infinity;
+    let melhor = null, frente = -Infinity;
     for (const p of projecoesTela) {
       const d = Math.hypot(p.sx - x, p.sy - y);
-      if (d <= Math.max(12, p.rPx * 1.15)) {
-        const score = d - p.z * 0.35;
-        if (score < melhorScore) { melhorScore = score; melhor = p; }
+      if (d <= Math.max(5, p.rPx) && p.z > frente) { melhor = p; frente = p.z; }
+    }
+    for (const seg of pontosLigacao) {
+      const { a,b } = seg;
+      const dx = b.sx - a.sx, dy = b.sy - a.sy;
+      const t = Math.max(0, Math.min(1, ((x - a.sx)*dx + (y - a.sy)*dy) / (dx*dx + dy*dy || 1)));
+      const z = a.z + t*(b.z - a.z);
+      if (Math.hypot(x - a.sx - t*dx, y - a.sy - t*dy) <= Math.max(4, .13*a.escPx) && z > frente + .18) {
+        melhor = seg; frente = z;
       }
     }
     return melhor;
   }
 
   // ── Interações de ponteiro, toque, roda e teclado ──
+  const toques = new Map();
+  let pinca = null;
+  const separar = () => { const [a,b] = [...toques.values()]; return Math.hypot(a[0]-b[0], a[1]-b[1]); };
   cvHud.addEventListener('pointerdown', (e) => {
+    abertura = null;
+    toques.set(e.pointerId, [e.clientX, e.clientY]);
+    if (toques.size === 2) pinca = { distancia: Math.max(1,separar()), zoom };
     arrastando = { x: e.clientX, y: e.clientY, rx, ry, panX, panY, moveu: false, shift: e.shiftKey || e.button === 1 || e.button === 2 };
     girando = false;
     container.querySelector('[data-3d="girar"]')?.setAttribute('aria-pressed', 'false');
@@ -2004,6 +2231,10 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   });
 
   cvHud.addEventListener('pointermove', (e) => {
+    if (toques.has(e.pointerId)) toques.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pinca && toques.size >= 2) {
+      zoom = Math.max(.42, Math.min(4.2, pinca.zoom * separar() / pinca.distancia)); pedirQuadro(); return;
+    }
     if (arrastando) {
       const dx = e.clientX - arrastando.x, dy = e.clientY - arrastando.y;
       if (Math.hypot(dx, dy) > 4) arrastando.moveu = true;
@@ -2021,7 +2252,9 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     const achado = localizarItemTela(e.clientX, e.clientY);
     if ((achado?.chave || null) !== (hoverItem?.chave || null)) {
       hoverItem = achado;
-      if (achado) {
+      if (achado && modelo?.temAtomos && !achado.chave.startsWith('ca:')) {
+        inspecionar(achado.chave, true);
+      } else if (achado) {
         inspetor.hidden = false;
         inspetor.textContent = achado.detalhe;
       } else {
@@ -2040,9 +2273,14 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   });
 
   const fimArrasto = (e) => {
+    toques.delete(e.pointerId);
+    if (pinca) { arrastando = null; if (toques.size < 2) pinca = null; return; }
     if (arrastando && !arrastando.moveu && e.type === 'pointerup') {
       const achado = localizarItemTela(e.clientX, e.clientY);
-      if (achado && (modoRegua || selecionados.length > 0)) {
+      if (achado && modelo?.temAtomos && !achado.chave.startsWith('ca:')) {
+        inspecionar(achado.chave, true);
+        if (modoRegua && achado.chave.startsWith('at:')) pontoDaRegua(+achado.chave.slice(3));
+      } else if (achado && (modoRegua || selecionados.length > 0)) {
         const idxEx = selecionados.findIndex((s) => s.chave === achado.chave);
         if (idxEx >= 0) selecionados.splice(idxEx, 1);
         else {
@@ -2054,6 +2292,9 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       }
     }
     arrastando = null;
+    ultimaInteracao = performance.now();
+    clearTimeout(reconstituir);
+    if (motorGL) reconstituir = setTimeout(() => pedirQuadro(),220);
   };
   cvHud.addEventListener('pointerup', fimArrasto);
   cvHud.addEventListener('pointercancel', fimArrasto);
@@ -2063,12 +2304,25 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   });
 
   cvHud.addEventListener('wheel', (e) => {
-    e.preventDefault();
+    e.preventDefault(); abertura = null; ultimaInteracao = performance.now();
     zoom = Math.max(0.42, Math.min(4.2, zoom * Math.exp(-e.deltaY * 0.0014)));
     pedirQuadro(false);
   }, { passive: false });
 
   cvHud.addEventListener('keydown', (e) => {
+    abertura = null; ultimaInteracao = performance.now();
+    if (modelo?.temAtomos && ['[',']','Enter'].includes(e.key)) {
+      e.preventDefault();
+      if (e.key === 'Enter') {
+        if (modoRegua && itemAtual.startsWith('at:')) pontoDaRegua(+itemAtual.slice(3));
+        else fixar();
+      } else {
+        const sel = q('[data-item]');
+        const n = (sel.selectedIndex + sel.length + (e.key === ']' ? 1 : -1)) % sel.length;
+        inspecionar(sel.options[n].value, true);
+      }
+      return;
+    }
     if (e.key === 'ArrowLeft') { e.preventDefault(); ry -= 0.13; pedirQuadro(); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); ry += 0.13; pedirQuadro(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); rx = Math.max(-1.52, rx - 0.13); pedirQuadro(); }
@@ -2091,24 +2345,30 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       pedirQuadro(true);
       return;
     }
-    const bSdf = e.target.closest('[data-3d-sdf]');
+    if (e.target.closest('[data-fixar]')) { fixar(); return; }
+    if (e.target.closest('[data-ponto]') && itemAtual.startsWith('at:')) { pontoDaRegua(+itemAtual.slice(3)); return; }
+    const soltar = e.target.closest('[data-soltar]');
+    if (soltar) { fixados.delete(soltar.dataset.soltar); atualizarFixados(); return; }
+    const xyz = e.target.closest('[data-xyz]');
+    const bSdf = e.target.closest('[data-3d-sdf]') || xyz;
     if (bSdf && modelo) {
       const info = opcoes3d[idxAtual] || {};
       try {
-        const sdfTxt = gerarSDF3DCliente(modelo, info, molMeta);
+        const sdfTxt = xyz ? [modelo.atomos.length, `${info.acesso} | ${fonteAtual()} | Å | ${indiceConf+1}`,
+          ...modelo.atomos.map(a => [a.s,a.ox,a.oy,a.oz].join(' ')), ''].join('\n') : gerarSDF3DCliente(modelo, info, molMeta);
         const slug = String(molMeta.nome || info.acesso || `mol_${molMeta.id || 0}`)
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 64) || 'estrutura_3d';
         const sufixo = info.natureza === 'experimental' ? 'experimental_3D' : '3D';
-        const blob = new Blob([sdfTxt], { type: 'chemical/x-mdl-sdfile;charset=utf-8' });
+        const blob = new Blob([sdfTxt], { type: xyz ? 'chemical/x-xyz' : 'chemical/x-mdl-sdfile;charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        const a = Object.assign(document.createElement('a'), { href: url, download: `${slug}_${sufixo}.sdf` });
+        const a = Object.assign(document.createElement('a'), { href: url, download: `${slug}_${sufixo}_${indiceConf + 1}.${xyz ? 'xyz' : 'sdf'}` });
         document.body.appendChild(a);
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1500);
-        anunciar(tr('SDF baixado.'));
+        anunciar(tr('Coordenadas baixadas.'));
       } catch {
-        if (info.id) window.open(`api/estruturas3d/${info.id}/sdf`, '_blank', 'noopener');
+        anunciar(tr('Falha ao exportar as coordenadas exibidas.'));
       }
       return;
     }
@@ -2124,7 +2384,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     }
     const bCor = e.target.closest('[data-cor]');
     if (bCor) {
-      modoCor = bCor.dataset.cor;
+      modoCor = bCor.dataset.cor; configurarLegenda();
       sincronizarBotoesBarra();
       atualizarTelemetriaERodape(opcoes3d[idxAtual] || {});
       pedirQuadro(true);
@@ -2144,8 +2404,11 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     const bAc = e.target.closest('[data-3d]');
     if (!bAc) return;
     const ac = bAc.getAttribute('data-3d');
-    if (ac === 'girar') {
-      girando = !girando;
+    abertura = null;
+    if (ac === 'mais' || ac === 'menos') {
+      zoom = Math.max(.42, Math.min(4.2, zoom * (ac === 'mais' ? 1.18 : 1/1.18))); pedirQuadro();
+    } else if (ac === 'girar') {
+      girando = !movimentoPausado() && !girando;
       bAc.setAttribute('aria-pressed', String(girando));
       pedirQuadro(false);
     } else if (ac === 'orto') {
@@ -2161,7 +2424,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       sincronizarBotoesBarra();
       pedirQuadro(true);
     } else if (ac === 'regua') {
-      modoRegua = !modoRegua;
+      modoRegua = !modoRegua; q('[data-ponto]').hidden = !modoRegua;
       bAc.setAttribute('aria-pressed', String(modoRegua));
       palco.classList.toggle('modo-regua', modoRegua);
       if (!modoRegua) selecionados = [];
@@ -2192,14 +2455,43 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   });
 
   container.querySelector('[data-sel-3d]')?.addEventListener('change', (e) => carregarIndice(Number(e.target.value)));
-  window.addEventListener('bmb:tema', () => pedirQuadro(true));
-  window.addEventListener('bmb:movimento', () => {
+  q('[data-conf]').addEventListener('change', e => trocarConformero(Number(e.target.value)));
+  q('[data-item]').addEventListener('change', e => inspecionar(e.target.value, true));
+  q('[data-torcao]').addEventListener('change', atualizarTorcoes);
+  const opts = { signal: vida.signal };
+  window.addEventListener('bmb:tema', () => pedirQuadro(true), opts);
+  const atualizarMovimento = () => {
     if (movimentoPausado()) {
-      girando = false;
-      container.querySelector('[data-3d="girar"]')?.setAttribute('aria-pressed', 'false');
+      abertura = null; girando = false;
+      q('[data-3d="girar"]').setAttribute('aria-pressed','false');
     }
-    pedirQuadro(false);
+    pedirQuadro();
+  };
+  window.addEventListener('bmb:movimento', atualizarMovimento, opts);
+  matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', atualizarMovimento, opts);
+  document.addEventListener('visibilitychange', () => pedirQuadro(), opts);
+  cvGl.addEventListener('webglcontextlost', e => {
+    e.preventDefault(); clearTimeout(reconstituir); ultimaInteracao = -Infinity;
+    motorGL = null; cvGl.hidden = true;
+    if (modoRepr === 'superficie') modoRepr = 'bolas';
+    q('[data-repr="superficie"]').hidden = true;
+    sincronizarBotoesBarra(); avisarModoSimples(); pedirQuadro(true);
+  }, opts);
+  cvGl.addEventListener('webglcontextrestored', () => {
+    motorGL = criarMotorGL2(cvGl); perfilInicial(); cvGl.hidden = !motorGL;
+    q('[data-repr="superficie"]').hidden = !motorGL || !modelo?.temAtomos;
+    q('[data-render-status]').hidden = !!motorGL; pedirQuadro(true);
+  }, opts);
+  const tamanhos = new ResizeObserver(() => pedirQuadro());
+  tamanhos.observe(palco);
+  const aparicao = new IntersectionObserver(([entry]) => { visivel = entry.isIntersecting; if (visivel) pedirQuadro(); });
+  aparicao.observe(palco);
+  const remover = new MutationObserver(() => {
+    if (container.isConnected) return;
+    ativo = false; versaoCarga++; cancelAnimationFrame(raf); clearTimeout(reconstituir);
+    tamanhos.disconnect(); aparicao.disconnect(); remover.disconnect(); vida.abort();
+    motorGL?.gl.getExtension('WEBGL_lose_context')?.loseContext();
   });
-
+  remover.observe(document.body, { subtree: true, childList: true });
   await carregarIndice(0);
 }

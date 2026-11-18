@@ -579,25 +579,39 @@ export function renderMolecula({ pack, taxonCtx }) {
   const tipo = tr(TIPO_MOL_POR_NOME[pack.tipo] || '');
   const ext = externos(pack);
   const massaMono = pack.massa_monoisotopica ?? pack.massa;
-  const metaQuim = [pack.formula, massaMono ? `${fmtFixo(massaMono, 4)} Da` : null].filter(Boolean).join(' · ') || tipo;
   const tem3d = (pack.estruturas_3d?.length || 0) > 0;
+  const limites = {
+    estereoquimica_indefinida: 'Estereoquímica incompleta na identidade de origem.',
+    tamanho_ou_flexibilidade: 'Tamanho ou flexibilidade fora da faixa validada.',
+    macrociclo: 'Macrociclo fora da faixa validada.',
+    multicomponente: 'A estrutura contém mais de um componente.',
+    elementos_ou_radical: 'Composição fora da faixa validada.',
+    sem_parametros_mmff: 'Parâmetros MMFF94s indisponíveis.',
+    identidade_ausente: 'Identidade química incompleta.', identidade_divergente: 'Identidade química sem confirmação.',
+  };
   const estPrim = tem3d ? pack.estruturas_3d[0] : null;
   const json3d = tem3d ? JSON.stringify(pack.estruturas_3d) : '';
   const jsonCons = tem3d ? JSON.stringify(pack.consultas || []) : '';
   const jsonMol = tem3d ? JSON.stringify({ id: pack.id, nome: pack.nome, formula: pack.formula, inchikey: pack.inchikey }) : '';
-  const estrutura = (tem3d || pack.estrutura)
-    ? html`<div class="estrutura-moldura" data-est-bloco>
-        <div class="estrutura-meta">
-          <span>${tr('Estrutura')} · ${metaQuim}</span>
-          ${tem3d && pack.estrutura ? html`<div class="alternador-vista" role="group" aria-label="${tr('Representação da estrutura')}">
-            <button type="button" data-modo-est="3d" aria-pressed="true">${icone('cubo')}3D</button>
-            <button type="button" data-modo-est="2d" aria-pressed="false">2D</button>
-          </div>` : html`<span>${tem3d ? '3D' : '2D (RDKit)'}</span>`}
-        </div>
-        ${tem3d ? html`<div data-painel-3d data-3d-auto="1" data-3d-mol="${jsonMol}" data-3d-json="${json3d}" data-3d-consultas="${jsonCons}"></div>` : ''}
-        ${pack.estrutura ? html`<div class="estrutura" data-painel-2d data-svg="dados/${pack.estrutura}" role="img" aria-label="${tr('Estrutura química 2D de {nome}', { nome: pack.nome })}" ${tem3d ? bruto('hidden') : ''}><span class="fonte-linha">${tr('Carregando estrutura…')}</span></div>` : ''}
-      </div>`
-    : html`<div class="estrutura vazia">${icone('molecula')}<span>${tr('Sem desenho 2D para esta molécula.')}</span></div>`;
+  const estrutura = html`<section class="mol-abertura" data-est-bloco data-vista="${tem3d ? '3d' : '2d'}" aria-labelledby="painel-titulo">
+    <div class="mol-barra-topo">
+      <button type="button" class="mol-voltar" data-voltar>${icone('voltar')}${tr('Voltar')}</button>
+      ${tem3d && pack.estrutura ? html`<div class="alternador-vista" role="group" aria-label="${tr('Representação da estrutura')}">
+        <button type="button" data-modo-est="3d" aria-pressed="true">3D</button>
+        <button type="button" data-modo-est="2d" aria-pressed="false">2D</button></div>` : ''}
+    </div>
+    <header class="mol-cab-cena">
+      <p class="mol-registro">${icone('molecula')}${tr('Molécula')} · BMB ${String(pack.id).padStart(5, '0')}</p>
+      <h2 id="painel-titulo" tabindex="-1" translate="no" class="${pack.nome.length > 38 ? 'nome-longo' : ''}">${pack.nome}</h2>
+      <p class="mol-formula">${pack.formula ? html`<span aria-label="${pack.formula}">${pack.formula.split(/(\d+)/).map((t) => /^\d+$/.test(t) ? html`<sub>${t}</sub>` : t)}</span>` : ''}${massaMono ? html`<span>${fmtFixo(massaMono, 4)} Da</span>` : ''}</p>
+      <p class="mol-natureza" data-cena-origem>${tem3d ? tr(estPrim.natureza === 'experimental' ? 'Estrutura experimental' : estPrim.natureza === 'predicao_computacional' ? 'Modelo predito' : 'Confôrmero calculado') : tr('Estrutura 3D indisponível')}</p>
+    </header>
+    ${tem3d ? html`<div data-painel-3d data-3d-auto="1" data-3d-mol="${jsonMol}" data-3d-json="${json3d}" data-3d-consultas="${jsonCons}"><div class="mol-espera" role="status">${tr('Carregando estrutura…')}</div></div>` : ''}
+    <div class="mol-plana" data-painel-2d ${tem3d ? bruto('hidden') : ''}>
+      ${pack.estrutura ? html`<div class="estrutura" data-svg="dados/${pack.estrutura}" role="img" aria-label="${tr('Estrutura química 2D de {nome}', { nome: pack.nome })}"></div>` : ''}
+      <p role="status" data-fallback>${!tem3d ? tr('Sem coordenadas 3D verificadas para este registro.') : ''} ${limites[pack.limitacao_3d] ? tr(limites[pack.limitacao_3d]) : ''} ${pack.estrutura ? tr('Diagrama 2D · RDKit') : tr('Sem desenho 2D para esta molécula.')}</p>
+    </div>
+  </section>`;
 
   const ocorre = pack.ocorre_em || [];
   const funcoes = ocorre.filter((o) => o.afirmacao.tipo === 'funcao_toxina' && (o.afirmacao.passagem || o.afirmacao.passagem_origem));
@@ -633,10 +647,10 @@ export function renderMolecula({ pack, taxonCtx }) {
   const fq = pack.fisico_quimica;
 
   const corpo = html`
-    <button type="button" class="btn-voltar" data-voltar>${icone('voltar')}Voltar</button>
-    <div class="cab-perfil">
-      <p class="eyebrow">${tr('MOLÉCULA')} · ${tipo}</p>
-      <h2 id="painel-titulo" tabindex="-1" class="nao-italico quebra-livre" translate="no">${pack.nome}</h2>
+    ${estrutura}
+    <div class="mol-dossie"><div class="cab-perfil">
+      <h3 class="sec-titulo">${tr('Identidade química')}</h3>
+      ${pack.nome.length > 38 ? html`<p class="quebra-livre" translate="no">${pack.nome}</p>` : ''}
       <div class="chips"><span class="badge ind">${icone('molecula')}${tipo}</span>
         ${natureza3d ? html`<span class="badge ${natureza3d[0]}" title="${natureza3d[2]}">${icone('cubo')}${tr(natureza3d[1])}</span>` : ''}
         ${pack.clinico ? badgeFarmaco({ retirado: pack.fase?.retirado, insumo }) : ''}
@@ -645,7 +659,6 @@ export function renderMolecula({ pack, taxonCtx }) {
         ${pack.familia ? html`<span class="badge ind">${pack.familia}</span>` : ''}</div>
       ${pack.nome_na_fonte && pack.nome_na_fonte !== pack.nome ? html`<p class="fonte-linha quebra-livre">${tr('Nome na fonte: {nome}.', { nome: pack.nome_na_fonte })}</p>` : ''}
     </div>
-    ${estrutura}
     <section class="cartao cartao-topo" aria-label="${tr('Identidade química')}">
       <dl class="dados">
         ${pack.formula ? html`<dt>${tr('Fórmula')}</dt><dd class="mono">${pack.formula}</dd>` : ''}
@@ -707,7 +720,7 @@ export function renderMolecula({ pack, taxonCtx }) {
     ${pack.refs.length ? html`<h3 class="sec-titulo">${icone('livro')}${tr('Referências')}<span class="contagem">${fmtInt(pack.refs.length)}</span></h3>
     <details class="mais"><summary>${trn(pack.refs.length, 'Mostrar {n} referência', 'Mostrar as {n} referências')}</summary><ol class="refs">${pack.refs.map(refItem)}</ol></details>` : ''}
     ${pack.consultas.length ? html`<h3 class="sec-titulo">${icone('dados')}${tr('Consultas às fontes')}</h3>
-    <ul class="refs sem-marcador">${pack.consultas.map((c) => html`<li>${trPartes(c.fonte_nome)} · ${fmtData(c.data)}${c.versao ? ` · ${tr('versão {v}', { v: c.versao })}` : ''} · ${tr('licença {l}', { l: trDado(c.licenca) })} · ${link(c.url, tr('abrir a consulta'))}</li>`)}</ul>` : ''}`;
+    <ul class="refs sem-marcador">${pack.consultas.map((c) => html`<li>${trPartes(c.fonte_nome)} · ${fmtData(c.data)}${c.versao ? ` · ${tr('versão {v}', { v: c.versao })}` : ''} · ${tr('licença {l}', { l: trDado(c.licenca) })} · ${link(c.url, tr('abrir a consulta'))}</li>`)}</ul>` : ''}</div>`;
   return { titulo: pack.nome, corpo };
 }
 
@@ -744,6 +757,7 @@ export async function hidratarEstruturas(raiz) {
       const mod = await import('./viz/estrutura3d.js');
       await mod.montarVisualizador3D(host, opcoes, consultas, molMeta);
     } catch {
+      host.dispatchEvent(new Event('bmb:falha3d', { bubbles: true }));
       host.innerHTML = html`<p class="fonte-linha erro-3d">${tr('Não foi possível carregar a estrutura 3D. Tente novamente.')}</p>`.toString();
     }
   };
@@ -753,21 +767,31 @@ export async function hidratarEstruturas(raiz) {
   }
 
   for (const alvo of raiz.querySelectorAll('[data-svg]')) {
-    if (!alvo.hidden) hidratarAlvoSvg(alvo);
+    if (!alvo.closest('[hidden]')) hidratarAlvoSvg(alvo);
   }
 
   for (const bloco of raiz.querySelectorAll('[data-est-bloco]')) {
     const p2d = bloco.querySelector('[data-painel-2d]');
     const p3d = bloco.querySelector('[data-painel-3d]');
     if (!p2d || !p3d) continue;
+    bloco.addEventListener('bmb:falha3d', () => {
+      p3d.hidden = true;
+      p2d.hidden = false;
+      bloco.dataset.vista = '2d';
+      bloco.querySelector('[data-cena-origem]').textContent = tr('Estrutura 3D indisponível');
+      const modos = bloco.querySelector('.alternador-vista');
+      if (modos) modos.hidden = true;
+      hidratarAlvoSvg(p2d.querySelector('[data-svg]'));
+    });
     bloco.querySelectorAll('[data-modo-est]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const modo = btn.getAttribute('data-modo-est');
         bloco.querySelectorAll('[data-modo-est]').forEach((b) => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+        bloco.dataset.vista = modo;
         p2d.hidden = modo !== '2d';
         p3d.hidden = modo !== '3d';
         if (modo === '3d') montarHost3D(p3d);
-        if (modo === '2d') hidratarAlvoSvg(p2d);
+        if (modo === '2d') hidratarAlvoSvg(p2d.querySelector('[data-svg]'));
       });
     });
   }

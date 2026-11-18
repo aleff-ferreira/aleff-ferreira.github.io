@@ -1,0 +1,96 @@
+/* O perfil molecular tem seu próprio campo de observação nos dois caminhos do catálogo. */
+.vista-mapa.vista-molecula { display:block; height:auto; min-height:0; }
+.vista-molecula .mapa-coluna { display:none; }
+.vista-molecula .painel-corpo { padding:0; overflow:visible; }
+.vista-molecula .trilha { order:2; }
+.mol-abertura {
+  --altura-cena:clamp(26rem,58svh,43rem);
+  --margem-cena:clamp(1.2rem,4.8vw,5.5rem);
+  position:relative; isolation:isolate;
+  background:#132425;
+}
+html[data-cena-molecular] .cromo-topo { transform:translateZ(0); box-shadow:none; background:var(--bg); backdrop-filter:none; -webkit-backdrop-filter:none; }
+html[data-cena-molecular] .grao { display:none; }
+.mol-campo,.mol-espera,.mol-plana {
+  position:relative; isolation:isolate; contain:paint; height:var(--altura-cena); overflow:hidden; color:#eaf4ec;
+  background:#233c3b url('campo-molecular.webp') center / 100% 100% no-repeat;
+}
+.mol-barra-topo { position:absolute; z-index:4; inset:1.2rem var(--margem-cena) auto; display:flex; align-items:center; justify-content:space-between; pointer-events:none; }
+.mol-barra-topo button,.mol-barra-topo .alternador-vista { pointer-events:auto; }
+.mol-voltar,.mol-camera button { display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color:#e4efe6; }
+.mol-voltar { background:transparent; border:0; gap:.45rem; padding:.45rem 0; font:500 .83rem var(--sans); }
+.mol-barra-topo .alternador-vista { border:1px solid #9bb8b45c; border-radius:28px; background:#142929b5; padding:3px; }
+.mol-barra-topo .alternador-vista button { border-radius:20px; color:#e2eeea; min-width:2.65rem; min-height:1.85rem; }
+.mol-barra-topo .alternador-vista button[aria-pressed="true"] { background:#dcf4df; color:#1c3932; box-shadow:none; }
+.mol-cab-cena { position:absolute; z-index:2; left:var(--margem-cena); top:calc(var(--altura-cena) * .32); width:33%; pointer-events:none; }
+.mol-registro { margin:0 0 1rem; display:flex; gap:.5rem; align-items:center; font:500 .7rem var(--mono); letter-spacing:.12em; text-transform:uppercase; color:#a9ceba; }
+.mol-registro svg { width:18px; height:18px; }
+.mol-cab-cena h2 { margin:0; line-height:1.03; font:400 clamp(2.55rem,5.1vw,5.8rem)/1.04 var(--serif); color:#f2f5e9; letter-spacing:-.045em; overflow-wrap:anywhere; text-wrap:balance; }
+.mol-cab-cena h2.nome-longo { font-size:clamp(1.65rem,2.55vw,3.3rem); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.mol-formula { margin:.95rem 0 .85rem; color:#e1e9df; display:flex; align-items:baseline; flex-wrap:wrap; column-gap:1rem; font:400 .9rem var(--mono); }
+.mol-formula span + span { color:#aec3bd; font-size:.76rem; }
+.mol-formula sub { font-size:.69em; }
+.mol-natureza { margin:0; color:#c1d2c8; font:.81rem var(--sans); display:flex; align-items:center; gap:.45rem; }
+.mol-natureza::before { content:''; height:7px; width:7px; border:1px solid #a7d8b5; transform:rotate(45deg); }
+.mol-abertura .lab3d-bloco { margin:0; border:0; border-radius:0; box-shadow:none; background:var(--bg); }
+.mol-abertura .mol-campo .lab3d-palco { contain:strict; transform:translateZ(0); position:absolute; inset:5% 1% 5% 33%; width:auto; height:auto; min-height:0; background:transparent; }
+.mol-abertura .lab3d-sombra { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.mol-abertura .lab3d-hud:focus-visible { outline:2px solid #a9d9c2; outline-offset:-3px; }
+.mol-elementos,.mol-camera { position:absolute; bottom:1.3rem; display:flex; align-items:center; color:#e1ede3; }
+.mol-elementos { left:var(--margem-cena); gap:.85rem; pointer-events:none; }
+.mol-elementos span { display:flex; align-items:center; gap:.34rem; font:500 .73rem var(--mono); }
+.mol-elementos i { width:.55rem; height:.55rem; border-radius:50%; border:1px solid #ffffff73; }
+.mol-camera { right:var(--margem-cena); gap:.28rem; }
+.mol-camera button { width:2.25rem; height:2.25rem; padding:.48rem; border:1px solid #a7c4b955; border-radius:50%; background:#172d2de8; }
+.mol-camera button:hover { background:#38524a; }
+.mol-escala { display:flex; align-items:center; gap:.5rem; font:.66rem var(--mono); margin-right:.65rem; }
+.mol-escala i { display:block; border:solid #d1e0d1; border-width:0 1px 1px; height:4px; }
+.mol-abertura .lab3d-inspetor { bottom:13%; left:auto; right:3%; max-width:min(21rem,90%); padding:.55rem .7rem; backdrop-filter:none; color:#e9f5ee; background:#102426f2; border:1px solid #a0c3af75; border-radius:6px; }
+.lab3d-inspetor strong,.lab3d-inspetor span { display:block; }
+.mol-instrumentos,.mol-dossie { padding:1rem var(--margem-cena); background:var(--bg); }
+.mol-instrumentos { border-bottom:1px solid var(--linha); }
+.mol-comandos,.mol-comandos>div,.mol-inspecao-topo { display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; }
+.mol-comandos { justify-content:space-between; padding:.15rem 0 .8rem; border-bottom:1px solid var(--linha); }
+.mol-instrumentos label,.mol-instrumentos summary { font:550 .86rem var(--sans); }
+.mol-instrumentos select { max-width:100%; border:1px solid var(--linha2); border-radius:6px; background:var(--surface); color:var(--ink); min-height:2.35rem; font:.8rem var(--mono); padding:.25rem .5rem; }
+.mol-instrumentos .lab3d-btn-sdf,.mol-instrumentos .lab3d-chip { min-height:2.25rem; padding:.36rem .66rem; font-size:.81rem; }
+.mol-instrumentos .lab3d-btn-sdf { background:var(--ink); color:var(--bg); }
+.mol-inspecao-topo { margin:.75rem 0 .4rem; }
+.mol-valores { display:flex; gap:.5rem 1.6rem; flex-wrap:wrap; margin:.6rem 0; }
+.mol-valores div { min-width:4rem; }
+.mol-valores dt,.mol-nota { color:var(--ink3); font:.75rem/1.5 var(--sans); }
+.mol-valores dd { margin:0; color:var(--ink); font:.8rem/1.4 var(--mono); }
+.mol-instrumentos summary { cursor:pointer; padding:.6rem 0; color:var(--ink); }
+.mol-instrumentos table { font:.8rem var(--mono); margin:.6rem 0; border-collapse:collapse; }
+.mol-instrumentos th,.mol-instrumentos td { padding:.35rem .7rem; border-bottom:1px solid var(--linha); text-align:right; }
+.mol-instrumentos .lab3d-subbarra,.mol-instrumentos .lab3d-rodape,.mol-instrumentos .lab3d-telemetria { padding:.5rem 0; background:transparent; }
+.mol-fixado { border-left:3px solid var(--verde); background:var(--bg2); padding:.4rem .8rem; margin:.6rem 0; }
+.mol-plana .estrutura { position:absolute; inset:14% 7% 18% 46%; background:#f6f6ed; border-radius:6px; }
+.mol-plana .estrutura svg { width:100%; height:100%; max-height:none; }
+.mol-plana [data-fallback] { position:absolute; bottom:1rem; left:var(--margem-cena); right:var(--margem-cena); color:#d4e7da; font-size:.85rem; }
+.mol-espera { display:flex; justify-content:center; align-items:center; padding-left:30%; }
+.mol-dossie { max-width:85rem; margin:auto; padding-block:1.3rem 3rem; }
+.mol-dossie .cab-perfil { margin-top:0; }
+.mol-abertura .lab3d-expandido { position:fixed; z-index:999; inset:0; overflow:auto; display:block; }
+.lab3d-expandido .mol-campo { height:82svh; }
+.mol-abertura .lab3d-expandido .lab3d-palco { inset:4% 0 8%; }
+@media(max-width:700px) {
+  .mol-abertura { --altura-cena:clamp(26rem,63svh,36rem); --margem-cena:1.15rem; }
+  .mol-barra-topo { top:.65rem; }
+  .mol-cab-cena { top:3.35rem; width:calc(100% - 2.3rem); }
+  .mol-cab-cena h2 { font-size:clamp(1.95rem,8vw,2.75rem); }
+  .mol-cab-cena h2.nome-longo { font-size:1.45rem; -webkit-line-clamp:2; }
+  .mol-registro { margin-bottom:.32rem; font-size:.63rem; }
+  .mol-formula { display:inline-flex; gap:.5rem; margin:.38rem .65rem 0 0; font-size:.76rem; }
+  .mol-natureza { display:inline-flex; font-size:.69rem; }
+  .mol-abertura .mol-campo .lab3d-palco { inset:8.8rem 0 2.9rem; }
+  .mol-elementos,.mol-camera { bottom:.68rem; }
+  .mol-elementos { gap:.46rem; }
+  .mol-escala { display:none; }
+  .mol-camera button { width:2.25rem; height:2.25rem; }
+  .mol-plana .estrutura { inset:10rem 1.5rem 5.2rem; }
+  .mol-comandos { justify-content:flex-start; }
+  .mol-espera { padding:6rem 0 0; }
+  .mol-instrumentos .lab3d-chip,.mol-instrumentos .lab3d-btn-sdf { min-height:2.5rem; }
+  .mol-abertura .lab3d-expandido .lab3d-palco { inset:3% 0 10%; }
+}

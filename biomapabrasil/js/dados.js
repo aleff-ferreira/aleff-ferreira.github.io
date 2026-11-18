@@ -94,16 +94,59 @@ export const geoLacunas = () => json('dados/geo/lacunas.json');
 export const indiceSinonimos = () => json('dados/sinonimos_indice.json');
 export const i18nEn = () => json('dados/i18n/en.json');
 export const viz = (nome) => json(`dados/viz/${nome}.json`);
-export async function estrutura3d(ref) {
+async function digest3d(bytes) {
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  return Array.from(hash, b => b.toString(16).padStart(2, '0')).join('');
+}
+export async function estrutura3d(ref, sha256) {
   if (!ref) throw new Error('caminho 3D vazio');
   const limpo = String(ref).replace(/^dados\//, '');
   const idxHash = limpo.indexOf('#');
+  if (limpo.startsWith('estruturas3d_ensembles/') && idxHash > 0) {
+    if (!memoria.has(limpo)) {
+      const p = (async () => {
+        const [ini, tam, assinatura] = limpo.slice(idxHash + 1).split(':');
+        const inicio = Number(ini), tamanho = Number(tam);
+        if (!Number.isSafeInteger(inicio) || !Number.isSafeInteger(tamanho) || inicio < 0 || tamanho < 1) throw Error('Intervalo inválido');
+        const url = 'dados/' + limpo.slice(0, idxHash) + '?m=' + assinatura + '-' + inicio;
+        const r = await fetch(url, { headers: { Range: `bytes=${inicio}-${inicio+tamanho-1}` } });
+        if (!r.ok) throw Error(`HTTP ${r.status}`);
+        const lote = await r.arrayBuffer();
+        const membro = r.status === 206 ? lote : lote.slice(inicio, inicio+tamanho);
+        if (membro.byteLength !== tamanho) throw Error('Membro incompleto');
+        const stream = new Blob([membro]).stream().pipeThrough(new DecompressionStream('gzip'));
+        const corpo = await new Response(stream).arrayBuffer();
+        if (globalThis.crypto?.subtle) {
+          const hash = await digest3d(corpo);
+          if (sha256 ? hash !== sha256 : !hash.startsWith(assinatura)) throw Error('SHA-256 divergente');
+        }
+        return JSON.parse(new TextDecoder().decode(corpo));
+      })();
+      memoria.set(limpo, p);
+      p.catch(() => memoria.delete(limpo));
+    }
+    return memoria.get(limpo);
+  }
   if (idxHash > 0) {
     const arq = limpo.slice(0, idxHash);
     const chave = limpo.slice(idxHash + 1);
     const lote = await json(`dados/${arq}`);
     if (lote && chave in lote) return lote[chave];
     throw new Error(`${arq}: chave ${chave} ausente`);
+  }
+  if (sha256?.length === 64 && globalThis.crypto?.subtle) {
+    const caminho = `dados/${limpo}`, chave = caminho + '#' + sha256;
+    if (!memoria.has(chave)) {
+      const p = fetch(caminho).then(async (res) => {
+        if (!res.ok) throw Error(`HTTP ${res.status}`);
+        const bytes = await res.arrayBuffer();
+        if (await digest3d(bytes) !== sha256) throw Error('SHA-256 divergente');
+        return JSON.parse(new TextDecoder().decode(bytes));
+      });
+      memoria.set(chave, p);
+      p.catch(() => memoria.delete(chave));
+    }
+    return memoria.get(chave);
   }
   return json(`dados/${limpo}`);
 }
