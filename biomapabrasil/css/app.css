@@ -2420,6 +2420,8 @@ details.mais[open] > summary {
 .filtros label {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
   font-family: var(--mono);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
@@ -2439,7 +2441,8 @@ details.mais[open] > summary {
   font-size: 0.9rem;
   text-transform: none;
   letter-spacing: normal;
-  min-width: 11.5rem;
+  min-width: min(11.5rem, 100%);
+  max-width: 100%;
 }
 .filtros input[type="search"]:focus,
 .filtros select:focus {

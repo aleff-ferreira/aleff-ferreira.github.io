@@ -908,8 +908,13 @@ export function montarConstelacao(raizPainel, { indice, ufs, filtroGrupos, filtr
     }
   });
 
+  const limpar = () => {
+    ro?.disconnect();
+    window.removeEventListener('bmb:tema', aoMudar);
+    window.removeEventListener('bmb:movimento', aoMudar);
+  };
   function loop(t) {
-    if (!canvas.isConnected) return;
+    if (!canvas.isConnected) { limpar(); return; }
     if (!document.hidden && !palco.closest('[hidden]')) desenhar(t);
     if (!movimentoPausado()) raf = requestAnimationFrame(loop);
   }
@@ -922,13 +927,13 @@ export function montarConstelacao(raizPainel, { indice, ufs, filtroGrupos, filtr
   }
 
   const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => {
-    if (!canvas.isConnected) { ro.disconnect(); return; }
+    if (!canvas.isConnected) { limpar(); return; }
     calcularGeometria();
     desenhar(performance.now());
   }) : null;
   ro?.observe(palco);
 
-  const aoMudar = () => { if (canvas.isConnected) iniciar(); };
+  function aoMudar() { if (canvas.isConnected) iniciar(); else limpar(); }
   window.addEventListener('bmb:tema', aoMudar);
   window.addEventListener('bmb:movimento', aoMudar);
   iniciar();

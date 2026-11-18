@@ -76,10 +76,11 @@ function anotarFolhas(no, prof = 0, acum = []) {
   return acum;
 }
 
-export async function montarFiloquimica(raiz) {
+export async function montarFiloquimica(raiz, { signal } = {}) {
   garantirEstilosObservatorio();
   raiz.innerHTML = `<div class="obs-pagina"><p class="carregando" role="status">${esc(tr('Carregando…'))}</p></div>`;
   const fq = await dados.viz('filoquimica');
+  if (signal?.aborted) return;
   const arvoreRaiz = fq.arvore;
   const aneisMeta = fq.aneis || [];
 
@@ -498,6 +499,7 @@ export async function montarFiloquimica(raiz) {
     iniX = ev.clientX;
     iniY = ev.clientY;
   });
+  const winOpts = signal ? { signal } : undefined;
   window.addEventListener('pointermove', (ev) => {
     if (!arrastando) return;
     const escala = (920 / zoom) / Math.max(320, svgWrap.clientWidth);
@@ -506,8 +508,8 @@ export async function montarFiloquimica(raiz) {
     iniX = ev.clientX;
     iniY = ev.clientY;
     aplicarViewBox();
-  });
-  window.addEventListener('pointerup', () => { arrastando = false; });
+  }, winOpts);
+  window.addEventListener('pointerup', () => { arrastando = false; }, winOpts);
 
   svgWrap.addEventListener('wheel', (ev) => {
     ev.preventDefault();

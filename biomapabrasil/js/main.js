@@ -397,11 +397,17 @@ async function rotaLacunas() {
 }
 
 // ───────── páginas ─────────
+let rotaAbort = null;
 function pagina(vista, titulo, montar) {
-  estado.token++;
+  const meu = ++estado.token;
+  const signal = rotaAbort?.signal;
   mostrarVista('pagina'); marcarMenu(vista);
   if (el.telemetria) el.telemetria.textContent = `${tr(titulo).toUpperCase()} · BIOMAPABRASIL`;
-  Promise.resolve(montar(el.vistaPagina)).then(() => { traduzirDOM(el.vistaPagina); depoisDeRenderizar(titulo); }).catch((e) => {
+  Promise.resolve(montar(el.vistaPagina, { signal })).then(() => {
+    if (meu !== estado.token || signal?.aborted) return;
+    traduzirDOM(el.vistaPagina); depoisDeRenderizar(titulo);
+  }).catch((e) => {
+    if (meu !== estado.token || signal?.aborted) return;
     console.error(e);
     el.vistaPagina.innerHTML = `<div class="pagina"><div class="erro-estado" role="alert">${esc(tr('Não foi possível carregar esta página. Tente novamente.'))}</div></div>`;
   });
@@ -413,6 +419,8 @@ function rotaNaoEncontrada() {
 
 // ═══════════════════════════ roteador ═══════════════════════════
 function rotear() {
+  rotaAbort?.abort();
+  rotaAbort = new AbortController();
   pulsarBarraRota();
   const bruto_ = location.hash.replace(/^#/, '') || '/';
   const [caminho, consulta] = bruto_.split('?');
@@ -425,15 +433,15 @@ function rotear() {
     if ((m = caminho.match(/^\/especie\/(\d+)(?:\/molecula\/(\d+))?$/))) return rotaEspecie(m[1], m[2]);
     if ((m = caminho.match(/^\/molecula\/(\d+)$/))) return rotaMolecula(m[1]);
     if (caminho === '/lacunas') return rotaLacunas();
-    if (caminho === '/galaxia') return pagina('galaxia', 'Espaço químico', (r) => import('./viz/galaxia_quimica.js').then((m) => m.montarGalaxia(r, params)));
-    if (caminho === '/fluxo') return pagina('fluxo', 'Fluxos e linhagens', (r) => import('./viz/fluxo_farmacologico.js').then((m) => m.montarFluxo(r)));
-    if (caminho === '/floresta') return pagina('floresta', 'Estratos florestais', (r) => import('./viz/raiox_floresta.js').then((m) => m.montarFloresta(r)));
-    if (caminho === '/filoquimica') return pagina('filoquimica', 'Quimiotaxonomia', (r) => import('./viz/filoquimica.js').then((m) => m.montarFiloquimica(r)));
-    if (caminho === '/especies') return pagina('especies', 'Espécies', (r) => Promise.all([dados.indice(), carregarPaginas()]).then(([ix, paginas]) => { estado.indice = ix; return paginas.montarEspecies(r, { indice: ix, ufs: estado.ufs, params, dataDados: estado.manifesto.gerado_em, recorteMin: estado.manifesto.recorte?.n_al_min }); }));
-    if (caminho === '/moleculas') return pagina('moleculas', 'Moléculas', (r) => carregarPaginas().then((paginas) => paginas.montarMoleculas(r, { params, dataDados: estado.manifesto.gerado_em })));
-    if (caminho === '/fontes') return pagina('fontes', 'Fontes e método', (r) => carregarPaginas().then((paginas) => { r.innerHTML = paginas.renderFontes(estado.manifesto); }));
-    if (caminho === '/dados') return pagina('dados', 'Dados abertos', (r) => carregarPaginas().then((paginas) => { r.innerHTML = paginas.renderDados(estado.manifesto); }));
-    if (caminho === '/sobre') return pagina('sobre', 'Sobre', (r) => carregarPaginas().then((paginas) => { r.innerHTML = paginas.renderSobre(); }));
+    if (caminho === '/galaxia') return pagina('galaxia', 'Espaço químico', (r, o) => import('./viz/galaxia_quimica.js').then((m) => !o.signal?.aborted && m.montarGalaxia(r, params, o)));
+    if (caminho === '/fluxo') return pagina('fluxo', 'Fluxos e linhagens', (r, o) => import('./viz/fluxo_farmacologico.js').then((m) => !o.signal?.aborted && m.montarFluxo(r, o)));
+    if (caminho === '/floresta') return pagina('floresta', 'Estratos florestais', (r, o) => import('./viz/raiox_floresta.js').then((m) => !o.signal?.aborted && m.montarFloresta(r, o)));
+    if (caminho === '/filoquimica') return pagina('filoquimica', 'Quimiotaxonomia', (r, o) => import('./viz/filoquimica.js').then((m) => !o.signal?.aborted && m.montarFiloquimica(r, o)));
+    if (caminho === '/especies') return pagina('especies', 'Espécies', (r, o) => Promise.all([dados.indice(), carregarPaginas()]).then(([ix, paginas]) => { if (o.signal?.aborted) return; estado.indice = ix; return paginas.montarEspecies(r, { indice: ix, ufs: estado.ufs, params, dataDados: estado.manifesto.gerado_em, recorteMin: estado.manifesto.recorte?.n_al_min }); }));
+    if (caminho === '/moleculas') return pagina('moleculas', 'Moléculas', (r, o) => carregarPaginas().then((paginas) => !o.signal?.aborted && paginas.montarMoleculas(r, { params, dataDados: estado.manifesto.gerado_em })));
+    if (caminho === '/fontes') return pagina('fontes', 'Fontes e método', (r, o) => carregarPaginas().then((paginas) => { if (!o.signal?.aborted) r.innerHTML = paginas.renderFontes(estado.manifesto); }));
+    if (caminho === '/dados') return pagina('dados', 'Dados abertos', (r, o) => carregarPaginas().then((paginas) => { if (!o.signal?.aborted) r.innerHTML = paginas.renderDados(estado.manifesto); }));
+    if (caminho === '/sobre') return pagina('sobre', 'Sobre', (r, o) => carregarPaginas().then((paginas) => { if (!o.signal?.aborted) r.innerHTML = paginas.renderSobre(); }));
     return rotaNaoEncontrada();
   } catch (e) { console.error(e); erro(e, rotear); }
 }

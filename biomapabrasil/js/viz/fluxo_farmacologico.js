@@ -34,10 +34,11 @@ function cartaoLinhagem(ln) {
   </article>`;
 }
 
-export async function montarFluxo(raiz) {
+export async function montarFluxo(raiz, { signal } = {}) {
   garantirEstilosObservatorio();
   raiz.innerHTML = `<div class="obs-pagina"><p class="carregando" role="status">${esc(tr('Carregando…'))}</p></div>`;
   const fx = await dados.viz('fluxo');
+  if (signal?.aborted) return;
   const nos = fx.nos || [];
   const links = fx.links || [];
   const linhagens = fx.linhagens || [];
@@ -185,7 +186,7 @@ export async function montarFluxo(raiz) {
     host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:820px;height:auto;display:block" role="group" aria-label="${esc(tr('Diagrama aluvial em quatro colunas'))}">
       ${cabecalhos}
       <line x1="${xPortao.toFixed(1)}" y1="34" x2="${xPortao.toFixed(1)}" y2="${H - 12}" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="5 5" stroke-opacity="0.72"/>
-      <text x="${xPortao.toFixed(1)}" y="44" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">${esc(tr('MOLÉCULA ISOLADA'))}</text>
+      <text x="${xPortao.toFixed(1)}" y="44" text-anchor="middle" fill="var(--ouro)" font-size="10" font-weight="700">${esc(tr('MOLÉCULA ISOLADA'))}</text>
       <g>${fitas}</g>
       <g>${nosSvg}</g>
     </svg>`;
@@ -205,13 +206,14 @@ export async function montarFluxo(raiz) {
     }
   });
 
-  raiz.addEventListener('click', (e) => {
+  const pag = raiz.querySelector('.obs-pagina') || raiz;
+  pag.addEventListener('click', (e) => {
     const bv = e.target.closest('[data-fx-vista]');
     if (bv) {
       vista = bv.getAttribute('data-fx-vista');
-      raiz.querySelectorAll('[data-fx-vista]').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-fx-vista') === vista)));
-      raiz.querySelector('#fx-area-diagrama').hidden = vista !== 'diagrama';
-      raiz.querySelector('#fx-area-tabela').hidden = vista !== 'tabela';
+      pag.querySelectorAll('[data-fx-vista]').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-fx-vista') === vista)));
+      pag.querySelector('#fx-area-diagrama').hidden = vista !== 'diagrama';
+      pag.querySelector('#fx-area-tabela').hidden = vista !== 'tabela';
     }
   });
 

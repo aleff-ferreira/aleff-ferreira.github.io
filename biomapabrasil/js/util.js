@@ -226,8 +226,8 @@ export const PREDOMINIO = {
 };
 export const TIPOS_MOLECULA = { s: 'Pequena molécula', p: 'Peptídeo', t: 'Proteína' };
 export const TIPO_MOL_POR_NOME = { pequena_molecula: 'Pequena molécula', peptideo: 'Peptídeo', proteina: 'Proteína' };
-export const ehInchiKey = (s) => /^[A-Z]{14}-[A-Z]{10}-[A-Z]$/.test(String(s || '').trim());
-export const nomeMolecula = (nome, id) => (ehInchiKey(nome) ? `${tr('Molécula')} BMB ${String(id).padStart(5, '0')}` : (nome || ''));
+export const ehInchiKey = (s) => /^[A-Za-z]{14}-[A-Za-z]{10}(?:-[A-Za-z])?$/.test(String(s || '').trim());
+export const nomeMolecula = (nome, id) => ((ehInchiKey(nome) || /^(?:CID|SCHEMBL|CHEMBL)\s*[-:]?\s*\d+$/i.test(String(nome || '').trim())) ? `${tr('Molécula')} BMB ${String(id).padStart(5, '0')}` : (nome || ''));
 
 export const DIMENSOES = {
   identidade_biologica: 'Identidade biológica',
@@ -364,10 +364,8 @@ export function mapaParaGeo(mx, my) {
 
 export function fmtCoord(graus, pos, neg) {
   const s = graus >= 0 ? pos : neg;
-  const a = Math.abs(graus);
-  const g = Math.floor(a);
-  const m = Math.min(59, Math.round((a - g) * 60));
-  return `${String(g).padStart(2, '0')}°${String(m).padStart(2, '0')}′${s}`;
+  const tot = Math.round(Math.abs(graus) * 60);
+  return `${String(Math.floor(tot / 60)).padStart(2, '0')}°${String(tot % 60).padStart(2, '0')}′${s}`;
 }
 
 /** Baixa o recorte em tela como CSV (UTF-8 com BOM, compatível com planilhas). */

@@ -1292,9 +1292,9 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
           <button type="button" class="lab3d-chip" data-cor="bfactor" aria-pressed="false" hidden>${tr('pLDDT ou fator B')}</button>
         </div>
         <div class="lab3d-grupo" role="group" aria-label="${tr('Camadas e medidas')}">
-          <button type="button" class="lab3d-chip" data-camada="aneis" aria-pressed="true" title="${tr('Sistemas aromáticos')}">${tr('Anéis aromáticos')}</button>
-          <button type="button" class="lab3d-chip" data-camada="pontesh" aria-pressed="true" title="${tr('Ligações de hidrogênio intramoleculares')}">${tr('Ligações de H')}</button>
-          <button type="button" class="lab3d-chip" data-camada="quiral" aria-pressed="true" title="${tr('Descritores CIP (R)/(S) e (E)/(Z)')}">${tr('Estereodescritores')}</button>
+          <button type="button" class="lab3d-chip" data-camada="aneis" aria-pressed="false" title="${tr('Sistemas aromáticos')}">${tr('Anéis aromáticos')}</button>
+          <button type="button" class="lab3d-chip" data-camada="pontesh" aria-pressed="false" title="${tr('Ligações de hidrogênio intramoleculares')}">${tr('Ligações de H')}</button>
+          <button type="button" class="lab3d-chip" data-camada="quiral" aria-pressed="false" title="${tr('Descritores CIP (R)/(S) e (E)/(Z)')}">${tr('Estereodescritores')}</button>
           <button type="button" class="lab3d-chip" data-3d="hidrogenios" title="${tr('Hidrogênios exibidos')}">${tr('Todos os H')}</button>
 
         </div>
@@ -2465,7 +2465,8 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       const cOut = cvOut.getContext('2d');
       cOut.fillStyle = temaClaro() ? '#efe9dc' : '#06100d';
       cOut.fillRect(0, 0, cvOut.width, cvOut.height);
-      if (motorGL) cOut.drawImage(cvGl, 0, 0);
+      if (cvSombra.width && cvSombra.height) cOut.drawImage(cvSombra, 0, 0, cvOut.width, cvOut.height);
+      if (motorGL && cvGl.width && cvGl.height) cOut.drawImage(cvGl, 0, 0, cvOut.width, cvOut.height);
       cOut.drawImage(cvHud, 0, 0);
       const a = Object.assign(document.createElement('a'), {
         href: cvOut.toDataURL('image/png'),

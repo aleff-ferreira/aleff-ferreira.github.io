@@ -1121,7 +1121,10 @@ export function criarGalaxia3D(container, opcoes = {}) {
   pedirQuadro();
 
   // Limpeza completa de recursos ao desmontar
+  let destruido = false;
   function destruir() {
+    if (destruido) return;
+    destruido = true;
     if (raf) {
       cancelAnimationFrame(raf);
       raf = 0;
@@ -1143,6 +1146,7 @@ export function criarGalaxia3D(container, opcoes = {}) {
     gl.deleteProgram(progPontos);
     gl.deleteProgram(progLinhas);
 
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
     canvas.remove();
   }
 

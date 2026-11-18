@@ -56,10 +56,11 @@ function parseCorRGB(str) {
   return hit;
 }
 
-export async function montarGalaxia(raiz, params = null) {
+export async function montarGalaxia(raiz, params = null, { signal } = {}) {
   garantirEstilosObservatorio();
   raiz.innerHTML = `<div class="obs-pagina"><p class="carregando" role="status">${esc(tr('Carregando…'))}</p></div>`;
   const gz = await dados.viz('galaxia');
+  if (signal?.aborted) return;
   const ix = Object.fromEntries(gz.colunas.map((c, i) => [c, i]));
   const escXY = gz.escala_xy || 1;
   const dicCls = gz.dicionario_classes || null;
@@ -572,7 +573,8 @@ export async function montarGalaxia(raiz, params = null) {
   });
 
   // Alternador de vistas (3D, 2D, tabela) e controles
-  raiz.addEventListener('click', (e) => {
+  const pag = raiz.querySelector('.obs-pagina') || raiz;
+  pag.addEventListener('click', (e) => {
     const bv = e.target.closest('[data-gx-vista]');
     if (bv) {
       vista = bv.getAttribute('data-gx-vista');
@@ -702,13 +704,17 @@ export async function montarGalaxia(raiz, params = null) {
     sincronizarCores3D();
     if (vista === 'canvas') pedirQuadro();
   };
-  window.addEventListener('bmb:tema', onTema);
+  window.addEventListener('bmb:tema', onTema, signal ? { signal } : undefined);
 
   const ro = new ResizeObserver(() => {
     if (vista === '3d') gx3D?.redimensionar();
     if (vista === 'canvas') pedirQuadro();
   });
   ro.observe(wrap);
+  signal?.addEventListener('abort', () => {
+    ro.disconnect();
+    gx3D?.destruir();
+  }, { once: true });
 
   const cardFoco = raiz.querySelector('#gx-foco-mol');
   function limparFocoMol(atualizarUrl = false) {
