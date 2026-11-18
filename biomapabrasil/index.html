@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BioMapaBrasil · Da floresta à molécula</title>
 <meta name="description" content="Espécies da Amazônia Legal, seus produtos naturais e toxinas, a bioatividade medida e os fármacos aprovados, com fonte, licença e data de consulta em cada registro. Associação documentada não é eficácia.">
+<link rel="canonical" href="https://aleff-ferreira.github.io/biomapabrasil/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BioMapaBrasil">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="BioMapaBrasil · Da floresta à molécula">
+<meta property="og:description" content="Observatório aberto de biodiversidade amazônica, produtos naturais, toxinas, bioatividade medida e linhagens farmacológicas com proveniência individual.">
+<meta property="og:url" content="https://aleff-ferreira.github.io/biomapabrasil/">
+<meta property="og:image" content="https://aleff-ferreira.github.io/biomapabrasil/icones/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://aleff-ferreira.github.io/biomapabrasil/icones/social-preview.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="theme-color" content="#070d0b" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#efeae0" media="(prefers-color-scheme: light)">
@@ -21,6 +33,7 @@
 <link rel="modulepreload" href="js/busca.js">
 <link rel="modulepreload" href="js/constelacao.js">
 <link rel="modulepreload" href="js/perfis.js">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Dataset","name":"BioMapaBrasil","description":"Espécies da Amazônia Legal, produtos naturais, toxinas, bioatividade medida e fármacos aprovados com proveniência pública.","url":"https://aleff-ferreira.github.io/biomapabrasil/","license":"https://creativecommons.org/licenses/by/4.0/","creator":{"@type":"Organization","name":"Amazonia Works","url":"https://aleff-ferreira.github.io/"},"keywords":["Amazônia Legal","produtos naturais","biodiversidade","quimiodiversidade","ChEMBL","GBIF"]}</script>
 </head>
 <body>
 <a class="pular" href="#principal">Pular para o conteúdo</a>
@@ -64,6 +77,7 @@
     <symbol id="i-copiar" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
     <symbol id="i-camadas" viewBox="0 0 24 24"><path d="M12 3L3 8l9 5 9-5z"/><path d="M3 12.5l9 5 9-5M3 17l9 5 9-5"/></symbol>
     <symbol id="i-pulso" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></symbol>
+    <symbol id="i-onda" viewBox="0 0 24 24"><path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/></symbol>
     <symbol id="i-grade" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/></symbol>
     <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3.5v5.5c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6.5z"/><circle cx="12" cy="11.5" r="2.2"/></symbol>
     <symbol id="i-galaxia" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4"/><path d="M12 5c4.8 0 8.5 2.7 8.5 6s-3.7 6-8.5 6-8.5-2.7-8.5-6c0-2.1 1.6-3.9 4.1-5"/><circle cx="18" cy="8" r="1.2"/><circle cx="6.5" cy="15.5" r="1.2"/></symbol>
@@ -108,7 +122,7 @@
       </span>
       <button id="idioma" class="btn-icone btn-idioma" type="button" lang="en" aria-label="Switch the interface to English" aria-pressed="false" title="PT / EN">EN</button>
       <button id="movimento" class="btn-icone" type="button" aria-label="Pausar animações" aria-pressed="false" title="Animações">
-        <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pulso"/></svg>
+        <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-onda"/></svg>
       </button>
       <button id="tema" class="btn-icone" type="button" aria-label="Alternar tema claro e escuro" aria-pressed="false" title="Tema claro ou escuro">
         <svg class="ic" aria-hidden="true" focusable="false"><use id="tema-ic" href="#i-sol"/></svg>
@@ -128,7 +142,7 @@
     <a href="#/fontes" data-vista="fontes"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-livro"/></svg>Fontes e método</a>
     <a href="#/dados" data-vista="dados"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-dados"/></svg>Dados abertos</a>
     <a href="#/sobre" data-vista="sobre"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-info"/></svg>Sobre</a>
-    <a href="#/sobre" class="menu-origem"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-voltar"/></svg>Amazonia Works</a>
+    <a href="../" class="menu-origem"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-voltar"/></svg>Amazonia Works</a>
   </nav>
 </div>
 
@@ -153,7 +167,7 @@
     <div class="rodape-marca">
       <p class="eyebrow">BIOMAPABRASIL · AMAZONIA WORKS</p>
       <p>Código sob GNU AGPL-3.0. Nome e marca reservados. Cada registro traz a licença e a data de consulta da fonte.</p>
-      <p><a href="#/fontes">Fontes e método</a> · <a href="#/dados">Dados abertos</a> · <a href="api/docs">API</a> · <a href="#/sobre">Amazonia Works</a></p>
+      <p><a href="#/fontes">Fontes e método</a> · <a href="#/dados">Dados abertos</a> · <a href="api/docs">API</a> · <a href="../">Amazonia Works</a></p>
       <p id="rodape-versao" class="rodape-versao"></p>
     </div>
     <p class="rodape-aviso">Os registros vêm de literatura e bases científicas públicas. <strong>Associação documentada não é eficácia.</strong> O conteúdo não substitui orientação médica.</p>

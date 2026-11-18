@@ -2,7 +2,7 @@
 // Espaço químico (`#/galaxia`): pequenas moléculas dispostas por similaridade estrutural, em 3D (WebGL), em 2D
 // (canvas) ou em tabela, com arestas TMAP, cores por variável, filtros por descritores RDKit e por esqueleto de
 // Bemis–Murcko, e exportação em CSV.
-import { html, esc, icone, tr, trDado, trPartes, fmtInt, fmtDec, fmtData, semAcento, anunciar, baixarCSV } from '../util.js';
+import { html, esc, icone, tr, trDado, trPartes, fmtInt, fmtDec, fmtData, semAcento, nomeMolecula, anunciar, baixarCSV } from '../util.js';
 import { FILTROS } from '../perfis.js';
 import * as dados from '../dados.js';
 import { garantirEstilosObservatorio } from './estilos_obs.js';
@@ -56,7 +56,7 @@ function parseCorRGB(str) {
   return hit;
 }
 
-export async function montarGalaxia(raiz) {
+export async function montarGalaxia(raiz, params = null) {
   garantirEstilosObservatorio();
   raiz.innerHTML = `<div class="obs-pagina"><p class="carregando" role="status">${esc(tr('Carregando…'))}</p></div>`;
   const gz = await dados.viz('galaxia');
@@ -93,6 +93,9 @@ export async function montarGalaxia(raiz) {
   let scafSel = -1;
   let cam = { x: 0, y: 0, z: 1 };
   let focoIdx = -1;
+  let molFocoFixo = -1;
+  let vizinhosFoco = [];
+  const idxPorId = new Map(mols.map((m, i) => [m[ix.id], i]));
 
   const nComAtiv = mols.filter((m) => m[ix.max_pch] != null).length;
   const nFase4 = mols.filter((m) => (m[ix.fase] || 0) >= 4).length;
@@ -121,6 +124,8 @@ export async function montarGalaxia(raiz) {
       <div class="obs-kpi"><b>${fmtInt(nComAtiv)}</b><span>com pChEMBL de molécula isolada</span></div>
       <div class="obs-kpi"><b>${fmtInt(nFase4)}</b><span>em fase 4 no ChEMBL</span></div>
     </div>
+
+    <div id="gx-foco-mol" class="cartao" hidden style="margin-bottom:1rem"></div>
 
     <div id="gx-area-canvas" class="obs-grade">
       <div class="obs-palco-card">
@@ -267,7 +272,8 @@ export async function montarGalaxia(raiz) {
       return;
     }
     const PIX = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-    dica.innerHTML = `<strong>${esc(m[ix.nome])}</strong>
+    const nomeEx = nomeMolecula(m[ix.nome], m[ix.id]);
+    dica.innerHTML = `<strong>${esc(nomeEx)}</strong>
       <div style="color:var(--ink3);font-size:.74rem">${esc([trDado(m[ix.classe]), m[ix.mw] ? `${fmtDec(m[ix.mw])} Da` : ''].filter(Boolean).join(' · '))}</div>
       ${m[ix.estrutura] ? `<img src="${PIX}" data-gx-est="${esc(m[ix.estrutura])}" alt="">` : ''}
       <div style="font-size:.74rem">cLogP ${fmtDec(m[ix.clogp])} · Fsp³ ${fmtDec(m[ix.fsp3])} · NP ${fmtDec(m[ix.npl])}${m[ix.max_pch] != null ? ` · <b>pChEMBL ${fmtDec(m[ix.max_pch])}</b>` : ''}</div>
@@ -345,7 +351,7 @@ export async function montarGalaxia(raiz) {
         && (fsp3Min <= 0 || (m[ix.fsp3] != null && m[ix.fsp3] >= fsp3Min))
         && (scafSel < 0 || m[ix.scaf] === scafSel)
         && (!soColeta || m[ix.coleta_amazonica_declarada] === 1)
-        && (!q || semAcento(`${m[ix.nome]} ${m[ix.classe]}`).includes(q));
+        && (!q || semAcento(`${m[ix.nome]} bmb ${String(m[ix.id]).padStart(5, '0')} bmb${m[ix.id]} #${m[ix.id]} ${m[ix.classe]}`).includes(q));
       maskVisivel[i] = ok ? 1 : 0;
       if (ok) {
         vis++;
@@ -440,12 +446,31 @@ export async function montarGalaxia(raiz) {
       ctx.fill();
     }
 
-    if (focoIdx >= 0 && maskVisivel[focoIdx]) {
-      const sx = telaXY[focoIdx * 2], sy = telaXY[focoIdx * 2 + 1];
-      ctx.strokeStyle = claro ? '#065f46' : '#fef08a';
-      ctx.lineWidth = 2.2;
+    const destaqueIdx = molFocoFixo >= 0 ? molFocoFixo : focoIdx;
+    if (molFocoFixo >= 0 && vizinhosFoco.length) {
+      const fx = telaXY[molFocoFixo * 2], fy = telaXY[molFocoFixo * 2 + 1];
+      ctx.strokeStyle = claro ? '#0284c7' : '#22d3ee';
+      ctx.lineWidth = 2.0;
       ctx.beginPath();
-      ctx.arc(sx, sy, rBase * 2.5, 0, Math.PI * 2);
+      for (const [vi] of vizinhosFoco) {
+        if (!maskVisivel[vi]) continue;
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(telaXY[vi * 2], telaXY[vi * 2 + 1]);
+      }
+      ctx.stroke();
+      for (const [vi] of vizinhosFoco) {
+        if (!maskVisivel[vi]) continue;
+        ctx.beginPath();
+        ctx.arc(telaXY[vi * 2], telaXY[vi * 2 + 1], rBase * 1.9, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    if (destaqueIdx >= 0 && maskVisivel[destaqueIdx]) {
+      const sx = telaXY[destaqueIdx * 2], sy = telaXY[destaqueIdx * 2 + 1];
+      ctx.strokeStyle = claro ? '#065f46' : '#fef08a';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(sx, sy, rBase * 2.6, 0, Math.PI * 2);
       ctx.stroke();
     }
   }
@@ -462,7 +487,7 @@ export async function montarGalaxia(raiz) {
     tb.innerHTML = html`<caption>${tr('{n} de {total} moléculas listadas. O CSV traz todas.', { n: fmtInt(vis.length), total: fmtInt(totalVis) })}</caption>
       <thead><tr>${['Molécula', 'Classe química', 'Massa monoisotópica (Da)', 'cLogP', 'TPSA (Å²)', 'Fsp³', 'NP-likeness', 'pChEMBL máximo', 'Táxons'].map((c) => html`<th scope="col">${tr(c)}</th>`)}</tr></thead>
       <tbody>${vis.map((m) => html`<tr>
-        <th scope="row"><a href="#/molecula/${m[ix.id]}">${m[ix.nome]}</a></th>
+        <th scope="row"><a href="#/molecula/${m[ix.id]}">${nomeMolecula(m[ix.nome], m[ix.id])}</a></th>
         <td>${trDado(m[ix.classe])}</td>
         <td class="num">${fmtDec(m[ix.mw])}</td>
         <td class="num">${fmtDec(m[ix.clogp])}</td>
@@ -633,6 +658,17 @@ export async function montarGalaxia(raiz) {
       raiz.querySelector('#gx-btn-tmap').setAttribute('aria-pressed', String(mostrarTMAP));
       if (gx3D && gx3D.ativo) gx3D.alternarFilamentos(mostrarTMAP);
       if (vista === 'canvas') pedirQuadro();
+      return;
+    }
+
+    const bViz = e.target.closest('[data-gx-ir-mol]');
+    if (bViz) {
+      focarPorMolId(Number(bViz.dataset.gxIrMol), true);
+      return;
+    }
+
+    if (e.target.closest('[data-gx-fechar-foco]')) {
+      limparFocoMol(true);
     }
   });
 
@@ -674,7 +710,61 @@ export async function montarGalaxia(raiz) {
   });
   ro.observe(wrap);
 
+  const cardFoco = raiz.querySelector('#gx-foco-mol');
+  function limparFocoMol(atualizarUrl = false) {
+    molFocoFixo = -1;
+    vizinhosFoco = [];
+    if (cardFoco) { cardFoco.hidden = true; cardFoco.innerHTML = ''; }
+    if (atualizarUrl) history.replaceState(null, '', '#/galaxia');
+    if (vista === 'canvas') pedirQuadro();
+  }
+  function focarPorMolId(molId, atualizarUrl = false) {
+    const i = idxPorId.get(Number(molId));
+    if (i == null || !cardFoco) { limparFocoMol(false); return; }
+    const m = mols[i];
+    const viz = [];
+    for (const e of arestas) {
+      if (e[0] === i) viz.push([e[1], e[2] ?? null]);
+      else if (e[1] === i) viz.push([e[0], e[2] ?? null]);
+    }
+    viz.sort((a, b) => (b[1] ?? -1) - (a[1] ?? -1));
+    molFocoFixo = i;
+    focoIdx = i;
+    vizinhosFoco = viz.slice(0, 10);
+    cam.z = 3.2;
+    const w_ = Math.max(260, wrap.clientWidth || 640);
+    const h_ = Math.max(260, wrap.clientHeight || 480);
+    const rEsc = Math.min(w_, h_) * 0.43 * cam.z;
+    cam.x = -m[ix.x] * rEsc;
+    cam.y = m[ix.y] * rEsc;
+    gx3D?.focarMolecula?.(m);
+
+    const nomeF = nomeMolecula(m[ix.nome], m[ix.id]);
+    const metaF = [trDado(m[ix.classe]), m[ix.mw] ? `${fmtDec(m[ix.mw])} Da` : '', m[ix.max_pch] != null ? `pChEMBL ${fmtDec(m[ix.max_pch])}` : ''].filter(Boolean).join(' · ');
+    cardFoco.innerHTML = html`<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:.75rem">
+        <div>
+          <p class="eyebrow" style="margin:0">${icone('galaxia')}${tr('Foco no espaço químico')} · BMB ${String(m[ix.id]).padStart(5, '0')}</p>
+          <h2 style="margin:.18rem 0">${nomeF}</h2>
+          ${metaF ? html`<p class="fonte-linha" style="margin:0">${metaF}</p>` : ''}
+        </div>
+        <div class="acoes-catalogo">
+          <a class="btn sec" href="#/molecula/${m[ix.id]}">${icone('molecula')}${tr('Abrir perfil')}</a>
+          <button type="button" class="btn sec" data-gx-fechar-foco="1">${icone('fechar')}${tr('Fechar')}</button>
+        </div>
+      </div>
+      ${vizinhosFoco.length ? html`<p class="fonte-linha" style="margin:.65rem 0 .35rem">${tr('Vizinhos estruturais diretos na árvore TMAP (clique para focar):')}</p>
+        <div class="chips">${vizinhosFoco.map(([vi, sim]) => {
+          const vm = mols[vi];
+          return html`<button type="button" class="chip" data-gx-ir-mol="${vm[ix.id]}">${nomeMolecula(vm[ix.nome], vm[ix.id])}${sim != null ? ` · Tanimoto ${fmtDec(sim, 2)}` : ''}</button>`;
+        })}</div>` : html`<p class="fonte-linha">${tr('Nenhum vizinho TMAP registrado neste recorte.')}</p>`}`.toString();
+    cardFoco.hidden = false;
+    if (atualizarUrl) history.replaceState(null, '', `#/galaxia?mol=${m[ix.id]}`);
+    if (vista === 'canvas') pedirQuadro();
+  }
+
   atualizarLegenda();
   sincronizarCores3D();
   recalcularFiltro();
+  const molInicial = params?.get('mol');
+  if (molInicial) requestAnimationFrame(() => { if (raiz.isConnected) focarPorMolId(molInicial, false); });
 }

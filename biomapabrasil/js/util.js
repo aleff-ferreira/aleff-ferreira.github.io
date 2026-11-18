@@ -226,6 +226,8 @@ export const PREDOMINIO = {
 };
 export const TIPOS_MOLECULA = { s: 'Pequena molécula', p: 'Peptídeo', t: 'Proteína' };
 export const TIPO_MOL_POR_NOME = { pequena_molecula: 'Pequena molécula', peptideo: 'Peptídeo', proteina: 'Proteína' };
+export const ehInchiKey = (s) => /^[A-Z]{14}-[A-Z]{10}-[A-Z]$/.test(String(s || '').trim());
+export const nomeMolecula = (nome, id) => (ehInchiKey(nome) ? `${tr('Molécula')} BMB ${String(id).padStart(5, '0')}` : (nome || ''));
 
 export const DIMENSOES = {
   identidade_biologica: 'Identidade biológica',

@@ -1,7 +1,7 @@
 // BioMapaBrasil, um produto da Amazonia Works. Licenciado conforme LICENSE e NOTICE.md.
 // Busca global: espécies (nome científico, popular, sinônimo), moléculas e estados.
 // Padrão ARIA combobox/listbox: setas, Enter, Escape. O índice de moléculas só é baixado quando preciso.
-import { esc, semAcento, debounce, anunciar, tr, trn, GRUPOS } from './util.js';
+import { esc, semAcento, debounce, anunciar, tr, trn, trDado, ehInchiKey, nomeMolecula, GRUPOS } from './util.js';
 import * as dados from './dados.js';
 
 const LIMITE = { uf: 3, taxon: 7, molecula: 7 };
@@ -58,14 +58,28 @@ export function criarBusca({ entrada, lista, ufs, aoEscolher }) {
       if (entrada.value.trim().length >= 2) buscar();
     }).catch(() => { sinonimosExtras = false; });
   };
+  let ikCarregado = false;
+  const mapMol = (m) => ({
+    m,
+    nomeNorm: semAcento(m.nome),
+    chave: semAcento(`${m.nome} bmb ${String(m.id).padStart(5, '0')} bmb${m.id} #${m.id} ${m.formula || ''} ${m.classe || ''} ${m.inchikey || ''}`),
+  });
   const carregarMols = () => {
     if (!molsPromessa) {
       molsPromessa = dados.indiceMoleculas().then((ix) => {
-        mols = ix.lista.map((m) => ({ m, nomeNorm: semAcento(m.nome), chave: semAcento(m.nome) }));
+        if (!mols) mols = ix.lista.map(mapMol);
         if (entrada.value.trim().length >= 2) buscar();
       }).catch(() => { molsPromessa = null; });
     }
     return molsPromessa;
+  };
+  const carregarIk = () => {
+    if (ikCarregado) return;
+    ikCarregado = true;
+    dados.indiceMoleculasComIk().then((ix) => {
+      mols = ix.lista.map(mapMol);
+      if (entrada.value.trim().length >= 2) buscar();
+    }).catch(() => { ikCarregado = false; });
   };
   const ufsNorm = ufs.map((u) => ({ u, nomeNorm: semAcento(u.n), chave: semAcento(`${u.n} ${u.s}`) }));
 
@@ -91,9 +105,12 @@ export function criarBusca({ entrada, lista, ufs, aoEscolher }) {
     }
     if (mols) {
       for (const { x } of grupo(mols, 'molecula', (o) => o.m.taxa * 10 + o.m.atividades)) {
+        const m = x.m;
+        const rotulo = nomeMolecula(m.nome, m.id);
+        const sub = [ehInchiKey(m.nome) ? m.nome.slice(0, 14) : '', m.formula, m.classe ? trDado(m.classe) : '', trn(m.taxa, '{n} táxon', '{n} táxons')]
+          .filter(Boolean).join(' · ');
         saida.push({
-          tipo: 'molecula', ic: 'molecula', id: x.m.id, rotulo: x.m.nome,
-          sub: trn(x.m.taxa, '{n} táxon', '{n} táxons'), href: `#/molecula/${x.m.id}`, tokens,
+          tipo: 'molecula', ic: 'molecula', id: m.id, rotulo, sub, href: `#/molecula/${m.id}`, tokens,
         });
       }
     }
@@ -149,7 +166,15 @@ export function criarBusca({ entrada, lista, ufs, aoEscolher }) {
   };
   const buscarAtrasado = debounce(buscar, 90);
 
-  entrada.addEventListener('input', () => { if (entrada.value.trim().length >= 2) { carregarMols(); carregarSinonimosExtras(); } buscarAtrasado(); });
+  entrada.addEventListener('input', () => {
+    const v = entrada.value.trim();
+    if (v.length >= 2) {
+      carregarMols();
+      carregarSinonimosExtras();
+      if (/^[a-z]{14}$/i.test(v) || /^[a-z]{10,14}-/i.test(v) || /^[A-Z][a-z]?\d+/.test(v)) carregarIk();
+    }
+    buscarAtrasado();
+  });
   entrada.addEventListener('focus', () => { if (entrada.value.trim()) buscar(); });
   entrada.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); if (lista.hidden) buscar(); marcar(ativo + 1); }

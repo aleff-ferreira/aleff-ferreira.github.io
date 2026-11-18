@@ -1953,11 +1953,21 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       badge.textContent = `${tr('Predita')} · ${info.acesso}${plddt ? ` (pLDDT ${fmtDec(plddt)})` : ''}`;
       texto = tr('Modelo predito por computador ({metodo}), não determinado por experimento.', { metodo: info.metodo || info.fonte });
     } else {
-      const eKcal = modelo.raw?.conformeros?.[indiceConf].energia ?? info.energia_kcal_mol ?? modelo.raw?.e_kcal;
+      const confs = modelo.raw?.conformeros;
+      const eKcal = confs?.[indiceConf]?.energia ?? info.energia_kcal_mol ?? modelo.raw?.e_kcal;
+      let boltz = null;
+      if (Array.isArray(confs) && confs.length >= 2 && confs.every((c) => Number.isFinite(c?.energia))) {
+        const eMin = Math.min(...confs.map((c) => c.energia));
+        const dE = confs.map((c) => c.energia - eMin);
+        const exps = dE.map((d) => Math.exp(-d / 0.59248));
+        const Z = exps.reduce((a, b) => a + b, 0) || 1;
+        boltz = { dE: dE[indiceConf], w: (exps[indiceConf] / Z) * 100 };
+      }
       badge.className = 'badge ind';
       badge.textContent = tr('Confôrmero calculado');
       texto = tr('Confôrmero calculado ({metodo}), não determinado por experimento.', { metodo: info.metodo || modelo.raw?.met || 'RDKit ETKDGv3' })
-        + (eKcal != null ? ` ${tr('Energia: {e} kcal/mol.', { e: fmtDec(eKcal) })}` : '');
+        + (eKcal != null ? ` ${tr('Energia: {e} kcal/mol.', { e: fmtDec(eKcal) })}` : '')
+        + (boltz ? ` ${tr('ΔE = {de} kcal/mol · peso de Boltzmann a 298,15 K (vácuo MMFF94s): {w}%.', { de: fmtDec(boltz.dE, 2), w: fmtDec(boltz.w, 1) })}` : '');
     }
     const limites = modelo.raw.fmt === 'ensemble-sdf-v1' ? tr('Energia de ponto único MMFF94s. A ordem só compara as poses desta molécula. Solvente e ambiente de ligação ausentes.') : '';
     rodape.innerHTML = `${legendaCor}<div>${esc(texto)} ${txtFonte} ${esc(limites)}</div>`;
@@ -2131,7 +2141,21 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       if (motorGL) q('[data-render-status]').hidden = true; else avisarModoSimples();
       q('[data-xyz]').hidden = !modelo.temAtomos;
       q('[data-conf-label]').hidden = modelos.length < 2;
-      q('[data-conf]').replaceChildren(...modelos.map((_, j) => new Option((j + 1) + ' / ' + modelos.length, j)));
+      const confsB = bruto.conformeros;
+      let boltzB = null;
+      if (Array.isArray(confsB) && confsB.length >= 2 && confsB.every((c) => Number.isFinite(c?.energia))) {
+        const eMin = Math.min(...confsB.map((c) => c.energia));
+        const dE = confsB.map((c) => c.energia - eMin);
+        const exps = dE.map((d) => Math.exp(-d / 0.59248));
+        const Z = exps.reduce((a, b) => a + b, 0) || 1;
+        boltzB = { dE, w: exps.map((x) => x / Z) };
+      }
+      q('[data-conf]').replaceChildren(...modelos.map((_, j) => new Option(
+        boltzB
+          ? `${j + 1}/${modelos.length} · ΔE ${fmtDec(boltzB.dE[j], 2)} kcal/mol (${Math.round(boltzB.w[j] * 100)}%)`
+          : `${j + 1} / ${modelos.length}`,
+        j,
+      )));
       aneisPi = detectarAneisPi(modelo);
       pontesH = detectarPontesH(modelo);
       desc3d = calcularDescritoresEOrientacao(modelo);

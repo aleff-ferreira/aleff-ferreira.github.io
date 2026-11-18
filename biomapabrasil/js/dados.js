@@ -27,6 +27,9 @@ function objetos(pacote) {
     for (let r = 0; r < n; r++) {
       const o = {};
       for (const c of colunas) o[c] = cols[c][r];
+      if (Array.isArray(pacote.dicionario_classes) && typeof o.classe === 'number') {
+        o.classe = o.classe >= 0 ? (pacote.dicionario_classes[o.classe] || '') : '';
+      }
       if ('popular' in o && !('populares' in o)) {
         o.populares = o.popular ? [o.popular] : [];
         delete o.popular;
@@ -84,13 +87,14 @@ export async function svgEstrutura(ref) {
   return r.ok ? r.text() : '';
 }
 export async function svgDataUri(ref) {
-  const s = await svgEstrutura(ref);
-  return s && s.trimStart().startsWith('<svg') ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}` : '';
+  const s = (await svgEstrutura(ref)).trimStart();
+  return s.startsWith('<svg') ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(s.replaceAll('currentColor', '#0b1f18'))}` : '';
 }
 export const geoUFs = () => json('dados/geo/ufs.json');
 export const geoRios = () => json('dados/geo/rios.json');
 export const geoBacias = () => json('dados/geo/bacias.json');
 export const geoLacunas = () => json('dados/geo/lacunas.json');
+export const indiceInchikeys = () => json('dados/inchikeys_indice.json');
 export const indiceSinonimos = () => json('dados/sinonimos_indice.json');
 export const i18nEn = () => json('dados/i18n/en.json');
 export const viz = (nome) => json(`dados/viz/${nome}.json`);
@@ -177,7 +181,7 @@ export async function indice() {
   return _indice;
 }
 
-let _mols;
+let _mols, _molsIk;
 /** Índice de moléculas, carregado sob demanda (é o maior arquivo de topo). */
 export async function indiceMoleculas() {
   if (!_mols) {
@@ -188,4 +192,25 @@ export async function indiceMoleculas() {
     _mols.catch(() => { _mols = null; });
   }
   return _mols;
+}
+export async function indiceMoleculasComIk() {
+  if (!_molsIk) {
+    _molsIk = Promise.all([indiceMoleculas(), indiceInchikeys().catch(() => null)]).then(([ix, iks]) => {
+      const arr = iks?.iks;
+      const fms = iks?.formulas;
+      if (Array.isArray(arr) || Array.isArray(fms)) {
+        ix.lista.forEach((m, i) => {
+          const v = arr?.[i];
+          if (v && !m.inchikey) {
+            m.inchikey = v.replace('~', '-UHFFFAOYSA-N');
+            m.conectividade = m.inchikey.slice(0, 14);
+          }
+          if (fms?.[i] && !m.formula) m.formula = fms[i];
+        });
+      }
+      return ix;
+    });
+    _molsIk.catch(() => { _molsIk = null; });
+  }
+  return _molsIk;
 }

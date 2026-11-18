@@ -2,6 +2,7 @@
 // Elementos gráficos do painel: fundo do mapa quando não há WebGL, grafo animado de estados e espécies,
 // contadores e radar de completude do registro.
 import { bruto, esc, fmtInt, tr, trn, reduzMovimento, GRUPOS } from './util.js';
+import { passaFiltroTaxon } from './perfis.js';
 
 export function movimentoPausado() {
   return reduzMovimento() || document.documentElement.dataset.movimento === 'pausado';
@@ -225,7 +226,7 @@ export function montarAtmosferaMapa(raizMapa) {
 }
 
 /** Grafo animado que liga os estados da Amazônia Legal às espécies com mais moléculas registradas. */
-export function montarConstelacao(raizPainel, { indice, ufs, filtroGrupos, aoNavegar }) {
+export function montarConstelacao(raizPainel, { indice, ufs, filtroGrupos, filtros = {}, aoNavegar }) {
   const palco = raizPainel?.querySelector('#constelacao-palco');
   const statusEl = raizPainel?.querySelector('#constelacao-status');
   if (!palco || !indice || !ufs) return;
@@ -244,12 +245,12 @@ export function montarConstelacao(raizPainel, { indice, ufs, filtroGrupos, aoNav
   const siglasAL = new Set(ufsAL.map((u) => u.s));
   const contUF = Object.fromEntries(ufsAL.map((u) => [u.s, 0]));
   for (const t of indice.lista) {
-    if (!t.recorte || !filtroGrupos.has(t.grupo)) continue;
+    if (!t.recorte || !filtroGrupos.has(t.grupo) || !passaFiltroTaxon(t, filtros)) continue;
     for (const [s, n] of Object.entries(t.uf || {})) if (n > 0 && siglasAL.has(s)) contUF[s] = (contUF[s] || 0) + 1;
   }
 
   const especies = [...indice.lista]
-    .filter((t) => t.recorte && filtroGrupos.has(t.grupo) && t.moleculas > 0)
+    .filter((t) => t.recorte && filtroGrupos.has(t.grupo) && passaFiltroTaxon(t, filtros) && t.moleculas > 0)
     .sort((a, b) => (b.aprovado - a.aprovado) || ((b.predominio === 'p') - (a.predominio === 'p')) || (b.moleculas - a.moleculas))
     .slice(0, 20);
 

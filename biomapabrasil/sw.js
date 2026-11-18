@@ -3,9 +3,9 @@
 // também. Estratégia pensada para 400 kbps: dados JSON "usa o cache e atualiza em segundo plano";
 // imagens, estruturas e fontes "cache primeiro". Os índices de topo e o dicionário de tradução sempre tentam a rede antes
 // (versão nova dos dados).
-const VERSAO = 'bmb-v22';
+const VERSAO = 'bmb-v23';
 const ESQUELETO = [
-  './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icones/icone.svg',
+  './', 'index.html', 'css/app.css', 'css/molecula.css', 'css/campo-molecular.webp', 'manifest.webmanifest', 'icones/icone.svg',
   'js/main.js', 'js/util.js', 'js/dados.js', 'js/mapa.js', 'js/busca.js', 'js/constelacao.js', 'js/perfis.js',
   'fontes/fraunces-normal-latin.woff2', 'fontes/geist-latin.woff2', 'fontes/geist-mono-latin.woff2',
 ];
@@ -64,7 +64,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   const caminho = url.pathname;
-  if (/\/dados\/(indice|indice_mapa|sinonimos_indice|moleculas_indice|manifesto|territorios)\.json$/.test(caminho)
+  if (/\/dados\/(indice|indice_mapa|sinonimos_indice|moleculas_indice|inchikeys_indice|manifesto|territorios)\.json$/.test(caminho)
       || /\/dados\/i18n\/.+\.json$/.test(caminho)) {
     // índices e dicionário de tradução: rede primeiro, para acompanharem a versão dos dados já na primeira visita
     e.respondWith(redeEAtualiza(req, VERSAO + '-dados').catch(() => caches.match(req)));

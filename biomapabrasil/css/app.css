@@ -1,9 +1,4 @@
-/* BioMapaBrasil · Observatório Territorial & Químico · Um produto da Amazonia Works.
-   Licenciado conforme LICENSE e NOTICE.md.
-   Dois modos cromáticos com contraste WCAG AA+ garantido:
-     - Escuro (padrão): Dossel Bioluminescente Noturno (obsidiana #070d0b, esmeralda #34d399, rio #38d9f5, ouro #fbbf24)
-     - Claro: Herbário Calcográfico (velino creme #efeae0, tinta botânica #0b1f18, esmeralda #115238, rio #0c5969)
-   Tipografia variável auto-hospedada (Fraunces + Geist + Geist Mono), zero requisições externas. */
+/* BioMapaBrasil · Observatório Territorial & Químico · Amazonia Works. */
 
 @property --rim-a {
   syntax: '<angle>';
@@ -1102,8 +1097,8 @@ html[data-movimento="pausado"] .mapa-svg .rio-fluxo { animation: none !important
   bottom: 0.85rem;
   z-index: 6;
   display: inline-flex;
-  gap: 0.25rem;
-  padding: 0.28rem;
+  gap: 0.16rem;
+  padding: 0.22rem;
   border-radius: 999px;
   background: var(--vidro);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
@@ -1112,14 +1107,14 @@ html[data-movimento="pausado"] .mapa-svg .rio-fluxo { animation: none !important
   box-shadow: var(--sombra);
 }
 .mapa-presets button {
-  padding: 0.32rem 0.7rem;
+  padding: 0.28rem 0.54rem;
   border-radius: 999px;
   border: 0;
   background: transparent;
   color: var(--ink2);
   font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
@@ -1196,9 +1191,9 @@ html[data-movimento="pausado"] .mapa-svg .rio-fluxo { animation: none !important
   backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid var(--linha2);
   border-radius: var(--raio-m);
-  padding: 0.58rem 0.82rem;
+  padding: 0.46rem 0.68rem;
   box-shadow: var(--sombra);
-  max-width: min(24.5rem, calc(100% - 10rem));
+  max-width: min(20.5rem, calc(100% - 15.8rem));
   font-size: 0.8rem;
 }
 .mapa-legenda b {
@@ -1218,14 +1213,14 @@ html[data-movimento="pausado"] .mapa-svg .rio-fluxo { animation: none !important
 .mapa-legenda li {
   flex: 1;
   text-align: center;
-  padding: 0.22rem 0.28rem;
+  padding: 0.22rem 0.24rem;
   font-family: var(--mono);
   font-size: 0.68rem;
   line-height: 1.15;
   color: var(--ink);
   border: 1px solid var(--linha2);
   border-radius: 4px;
-  min-width: 2.5rem;
+  min-width: 1.85rem;
 }
 .mapa-legenda li.v0 { background: var(--e0); }
 .mapa-legenda li.v1 { background: var(--e1); }
@@ -2678,6 +2673,9 @@ table.tabela {
 }
 
 /* ─────────────────── Responsividade, Alto Contraste e Movimento ─────────────────── */
+@media (min-width: 64.01rem) and (max-width: 78rem) {
+  .mapa-legenda { bottom: 3.45rem; max-width: calc(100% - 1.7rem); }
+}
 @media (max-width: 72rem) {
   .telemetria-pill { display: none; }
   .mapa-coords { display: none; }

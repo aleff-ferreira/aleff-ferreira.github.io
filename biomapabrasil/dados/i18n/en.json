@@ -35,7 +35,6 @@
   "Os registros vêm de literatura e bases científicas públicas.": "Records come from the public scientific literature and public databases.",
   "Associação documentada não é eficácia.": "A documented association is not evidence of efficacy.",
   "O conteúdo não substitui orientação médica.": "The content is not medical advice.",
-
   "Território": "Territory",
   "Espécie": "Species",
   "Molécula": "Molecule",
@@ -68,7 +67,6 @@
   "Não foi possível copiar.": "Copy failed.",
   "Dados de {data}. Táxons no recorte: {t}. Estruturas (InChIKey): {m}.": "Data release of {data}. In-scope taxa: {t}. Structures (InChIKey): {m}.",
   "Dados de {data}. Táxons no recorte: {t}. Moléculas: {m}.": "Data release of {data}. In-scope taxa: {t}. Molecules: {m}.",
-
   "Táxons do banco por estado, exceto os de registros dispersos": "Database taxa per state, excluding taxa with dispersed records",
   "Exclui táxons com menos da metade dos registros brasileiros na Amazônia Legal. Conta táxons deste banco, não a biodiversidade do estado. Fonte: GBIF.": "Excludes taxa with fewer than half of their Brazilian records in the Legal Amazon. Counts taxa in this database, not the biodiversity of the state. Source: GBIF.",
   "Táxons do banco com registro no estado": "Database taxa recorded in the state",
@@ -107,7 +105,6 @@
   "Células de 0,5°. Âmbar mais intenso: menos registros do GBIF por km². Mede esforço de amostragem, não riqueza de espécies.": "0.5° cells. Deeper amber: fewer GBIF records per km². This measures sampling effort, not species richness.",
   "Registros por estado": "Records per state",
   "Faixas de valores": "Value classes",
-
   "fora do recorte": "out of scope",
   "{n} táxon": "{n} taxon",
   "{n} táxons": "{n} taxa",
@@ -117,7 +114,6 @@
   "{n} sugestão. Use as setas para escolher.": "{n} suggestion. Use the arrow keys to choose.",
   "{n} sugestões. Use as setas para escolher.": "{n} suggestions. Use the arrow keys to choose.",
   "Nenhuma sugestão.": "No suggestions.",
-
   "Grafo dos estados da Amazônia Legal e das espécies com mais moléculas registradas. As setas alternam entre os nós e Enter abre o nó em foco.": "Graph of the Legal Amazon states and the species with the most recorded molecules. Arrow keys move between nodes and Enter opens the focused node.",
   "{n} estado": "{n} state",
   "{n} estados": "{n} states",
@@ -135,7 +131,6 @@
   "RAST": "TRACE",
   "LIC": "LIC",
   "ÉTIC": "ETH",
-
   "(abre em nova aba)": "(opens in a new tab)",
   "Fonte": "Source",
   "consulta de {data}": "retrieved {data}",
@@ -254,7 +249,6 @@
   "Nenhum registro do GBIF com estado atribuído.": "No GBIF record with an assigned state.",
   "Registros do GBIF por estado": "GBIF records per state",
   "Barras em destaque: estados da Amazônia Legal. Contagens agregadas por estado.": "Highlighted bars: Legal Amazon states. Counts aggregated by state.",
-
   "PRODUTOS NATURAIS · AMAZÔNIA LEGAL": "NATURAL PRODUCTS · LEGAL AMAZON",
   "Da floresta à": "From forest to",
   "molécula": "molecule",
@@ -285,7 +279,6 @@
   "Seleção editorial. A aprovação refere-se ao fármaco, não ao organismo nem a extratos ou preparações.": "Editorial selection. Approval applies to the drug, not to the organism or to extracts or preparations.",
   "Tabela de espécies": "Species table",
   "Tabela de moléculas": "Molecule table",
-
   "Todo o estado integra a Amazônia Legal.": "The whole state lies within the Legal Amazon.",
   "Parte do estado integra a Amazônia Legal. As contagens usam o estado inteiro.": "Part of the state lies within the Legal Amazon. Counts use the whole state.",
   "Estado fora da Amazônia Legal.": "State outside the Legal Amazon.",
@@ -294,7 +287,6 @@
   "Mostrar os {n} táxons": "Show all {n} taxa",
   "Fonte: GBIF, contagens por estado (campo gadmLevel1Gid), na data de consulta de cada táxon. Registros sem estado atribuído não entram.": "Source: GBIF, counts per state (gadmLevel1Gid field) on the retrieval date of each taxon. Records with no assigned state are not counted.",
   "Tabela dos táxons do estado": "Table of taxa in the state",
-
   "O ChEMBL registra retirada do mercado em ao menos uma jurisdição.": "ChEMBL records a market withdrawal in at least one jurisdiction.",
   "Fármaco aprovado, com retirada registrada": "Approved drug, withdrawal on record",
   "Metabólito primário ou insumo farmacêutico com fase 4 no ChEMBL.": "Primary metabolite or pharmaceutical ingredient at phase 4 in ChEMBL.",
@@ -375,7 +367,6 @@
   "Nome, classe química ou família": "Name, chemical class or family",
   "Mostrar as {n} moléculas": "Show all {n} molecules",
   "Nenhuma molécula registrada para este táxon.": "No molecule recorded for this taxon.",
-
   "Estrutura": "Structure",
   "Representação da estrutura": "Structure representation",
   "Estrutura química 2D de {nome}": "2D chemical structure of {nome}",
@@ -450,7 +441,6 @@
   "Não foi possível carregar a estrutura 3D. Tente novamente.": "The 3D structure could not be loaded. Please try again.",
   "Fotografia ampliada": "Enlarged photograph",
   "Fechar": "Close",
-
   "TABELA DE TÁXONS": "TAXON TABLE",
   "Táxons do banco, com os mesmos dados do mapa. O recorte amazônico exige ao menos {n} registros do GBIF na Amazônia Legal.": "Database taxa, with the same data as the map. The Amazonian scope requires at least {n} GBIF records in the Legal Amazon.",
   "Táxons do banco, com os mesmos dados do mapa.": "Database taxa, with the same data as the map.",
@@ -504,7 +494,6 @@
   "Página {p} de {n}": "Page {p} of {n}",
   "Anterior": "Previous",
   "Próxima": "Next",
-
   "ESFORÇO DE COLETA · GRADE DE 0,5°": "SAMPLING EFFORT · 0.5° GRID",
   "Células de 0,5° (cerca de 55 km de lado) sobre a Amazônia Legal. Cada célula cruza a densidade de registros do GBIF com o desmatamento (INPE PRODES) e a cobertura de áreas protegidas (CNUC e FUNAI). Poucos registros indicam pouca coleta, não poucas espécies.": "0.5° cells (about 55 km across) over the Legal Amazon. Each cell combines GBIF record density with deforestation (INPE PRODES) and protected-area cover (CNUC and FUNAI). Few records indicate little collecting, not few species.",
   "células analisadas": "cells analyzed",
@@ -522,7 +511,6 @@
   "Fontes: {fontes}.": "Sources: {fontes}.",
   "Consulta de {data}.": "Retrieved {data}.",
   "Consultas de {a} a {b}.": "Retrieved between {a} and {b}.",
-
   "FONTES E MÉTODO": "SOURCES AND METHODS",
   "Fontes, licenças e datas de consulta. Critérios do recorte, níveis de evidência e procedência dos registros.": "Sources, licenses and retrieval dates. Scope criteria, evidence levels and record provenance.",
   "Princípios": "Principles",
@@ -578,7 +566,6 @@
   "A ausência de um composto ou de uma medida reflete o conteúdo das fontes na data da consulta.": "The absence of a compound or of a measurement reflects the content of the sources on the retrieval date.",
   "Subestruturas PAINS (RDKit) e fármacos com retirada de mercado registrada no ChEMBL são sinalizados. Metabólitos primários e insumos farmacêuticos em fase 4 são distinguidos dos demais fármacos aprovados.": "PAINS substructures (RDKit) and drugs with a market withdrawal recorded in ChEMBL are flagged. Primary metabolites and pharmaceutical ingredients at phase 4 are distinguished from other approved drugs.",
   "Dados de {data}, gerados por {versao}. SHA-256 do conjunto:": "Data release of {data}, generated by {versao}. SHA-256 of the data set:",
-
   "DADOS ABERTOS": "OPEN DATA",
   "Os dados exibidos no site, em arquivos. Cada linha traz fonte e data de consulta. CSV em UTF-8 com BOM.": "The data shown on the site, as files. Every row carries its source and retrieval date. CSV in UTF-8 with BOM.",
   "Arquivos para baixar": "Files for download",
@@ -620,7 +607,6 @@
   "Citação": "Citation",
   "Ao reutilizar dados de uma fonte, cite também a fonte.": "When reusing data from a source, cite the source as well.",
   "BioMapaBrasil (Amazonia Works). Dados abertos, versão de {data}. {url}. Acesso em {hoje}.": "BioMapaBrasil (Amazonia Works). Open data, release of {data}. {url}. Accessed {hoje}.",
-
   "SOBRE": "ABOUT",
   "Sobre o BioMapaBrasil": "About BioMapaBrasil",
   "Base de dados aberta sobre espécies da Amazônia Legal, seus produtos naturais e toxinas, a bioatividade medida e os fármacos aprovados.": "An open database of Legal Amazon species, their natural products and toxins, measured bioactivity and approved drugs.",
@@ -649,7 +635,6 @@
   "Aproximam e afastam.": "Zoom in and out.",
   "Mostra o Brasil inteiro.": "Shows all of Brazil.",
   "O conteúdo do mapa existe também em tabela ordenável. As animações seguem a preferência de movimento reduzido do sistema e podem ser pausadas no topo da página.": "The map content is also available as a sortable table. Animations follow the reduced-motion preference of the system and can be paused at the top of the page.",
-
   "SUB-BACIAS · FAMÍLIAS · CLASSES QUÍMICAS · ALVOS E VIAS": "SUB-BASINS · FAMILIES · CHEMICAL CLASSES · TARGETS AND PATHWAYS",
   "Diagrama aluvial em quatro colunas: sub-bacia amazônica, família, classe química da molécula isolada e, na quarta, alvo molecular, sistema de ensaio, via do Reactome ou fármaco. A largura de cada faixa é proporcional ao número de pares táxon–molécula que ligam os dois nós. Um par com várias sub-bacias ou vários destinos é dividido igualmente entre eles.": "Alluvial diagram in four columns: Amazonian sub-basin, family, chemical class of the isolated molecule and, in the fourth, molecular target, assay system, Reactome pathway or drug. The width of each band is proportional to the number of taxon–molecule pairs linking the two nodes. A pair with several sub-basins or several destinations is split equally among them.",
   "Diagrama": "Diagram",
@@ -668,7 +653,6 @@
   "{nome}: destacar ligações": "{nome}: highlight links",
   "Diagrama aluvial em quatro colunas": "Alluvial diagram in four columns",
   "MOLÉCULA ISOLADA": "ISOLATED MOLECULE",
-
   "ESTRATOS · FLORA E FUNGA DO BRASIL · CTFB · GBIF": "STRATA · FLORA E FUNGA DO BRASIL · CTFB · GBIF",
   "Espécies do recorte por estrato vertical da floresta, com as classes químicas das moléculas relatadas em cada estrato.": "In-scope species by vertical forest stratum, with the chemical classes of the molecules reported in each stratum.",
   "Perfil vertical": "Vertical profile",
@@ -696,7 +680,6 @@
   "Classes químicas mais frequentes no estrato": "Most frequent chemical classes in the stratum",
   "Todos os estratos": "All strata",
   "{n} de {total} espécies listadas. A tabela traz todas.": "{n} of {total} species listed. The table shows all of them.",
-
   "QUIMIOTAXONOMIA · GBIF · LOTUS · NUBBE-DB · CHEMBL · IUCN · MMA": "CHEMOTAXONOMY · GBIF · LOTUS · NUBBE-DB · CHEMBL · IUCN · MMA",
   "Árvore taxonômica circular das espécies do recorte, com cinco anéis de dados por espécie. Um clique em um nó interno abre o clado. Um clique em uma espécie abre o perfil.": "Circular taxonomic tree of the in-scope species, with five data rings per species. Clicking an internal node opens the clade. Clicking a species opens its profile.",
   "Árvore": "Tree",
@@ -727,7 +710,6 @@
   "{nome}: {n} espécie. Abrir clado.": "{nome}: {n} species. Open clade.",
   "{nome}: {n} espécies. Abrir clado.": "{nome}: {n} species. Open clade.",
   "Clado: {nome}": "Clade: {nome}",
-
   "ESPAÇO QUÍMICO · MORGAN ECFP4 · TMAP": "CHEMICAL SPACE · MORGAN ECFP4 · TMAP",
   "pequenas moléculas": "small molecules",
   "arestas de similaridade (TMAP)": "similarity edges (TMAP)",
@@ -773,7 +755,6 @@
   "{n} de {total} moléculas listadas. O CSV traz todas.": "{n} of {total} molecules listed. The CSV contains all of them.",
   "Massa monoisotópica (Da)": "Monoisotopic mass (Da)",
   "Clique para abrir o perfil": "Click to open the profile",
-
   "Baixar SDF": "Download SDF",
   "Baixar SDF experimental": "Download experimental SDF",
   "Arquivo SDF com coordenadas experimentais ({acesso})": "SDF file with experimental coordinates ({acesso})",
@@ -869,7 +850,6 @@
   "Um composto relatado em um organismo é um registro de ocorrência química. Uma medida de bioatividade descreve a molécula isolada em um ensaio. Um efeito clínico descreve o fármaco aprovado. Nenhum desses registros descreve efeito do organismo, do extrato ou da planta.": "A compound reported in an organism is a record of chemical occurrence. A bioactivity measurement describes the isolated molecule in an assay. A clinical effect describes the approved drug. None of these records describes an effect of the organism, the extract or the plant.",
   "Acessível a todos": "Accessible to all",
   "Navegação por teclado, leitor de tela, respeito a prefers-reduced-motion e contraste AA nos temas claro e escuro.": "Keyboard navigation, screen-reader support, respect for prefers-reduced-motion and AA contrast in the light and dark themes.",
-
   "Backbone taxonômico, contagens agregadas de ocorrência e mídia. Cada imagem declara a própria licença.": "Taxonomic backbone, aggregated occurrence counts and media. Each image states its own license.",
   "Toxinas animais revisadas manualmente, com função anotada e evidência por publicação.": "Manually reviewed animal toxins, with annotated function and publication-level evidence.",
   "Pares estrutura–organismo com a referência que os sustenta e taxonomia química NPClassifier. Lido do registro congelado 10.5281/zenodo.19360665, que declara licença CC BY 4.0 (os dados do LOTUS no Wikidata são CC0).": "Structure–organism pairs with the supporting reference and NPClassifier chemical taxonomy. Read from the frozen record 10.5281/zenodo.19360665, which declares a CC BY 4.0 license (LOTUS data on Wikidata are CC0).",
@@ -899,7 +879,6 @@
   "Universo taxonômico aceito completo da fauna brasileira, origem e distribuição estadual.": "Complete accepted taxonomic universe of the Brazilian fauna, origin and distribution by state.",
   "Estruturas cristalográficas tridimensionais experimentais de pequenas moléculas e produtos naturais determinadas por difração de raios X e nêutrons de monocristal (domínio público CC0).": "Experimental three-dimensional crystal structures of small molecules and natural products, determined by single-crystal X-ray and neutron diffraction (public domain, CC0).",
   "Predições computacionais atômicas de estrutura proteica por modelo de linguagem evolutiva ESMFold v1 com métrica pLDDT por resíduo, empregadas quando a sequência madura não consta no AlphaFold DB.": "Atomic-level computational predictions of protein structure by the ESMFold v1 evolutionary language model, with per-residue pLDDT, used when the mature sequence is not in AlphaFold DB.",
-
   "natural products occurrences (registro congelado no Zenodo)": "natural products occurrences (frozen record on Zenodo)",
   "Sub-bacias Hidrográficas": "Sub-basins",
   "Arquivo Darwin Core Oficial (IPT JBRJ)": "Official Darwin Core Archive (IPT JBRJ)",
@@ -907,7 +886,6 @@
   "RDKit Cheminformatics (cálculo determinístico local)": "RDKit Cheminformatics (local deterministic calculation)",
   "INPE TerraBrasilis (PRODES) & MMA CNUC / FUNAI (síntese espacial 0,5°)": "INPE TerraBrasilis (PRODES) & MMA CNUC / FUNAI (0.5° spatial synthesis)",
   "GBIF Backbone (sem entrada explícita no checklist nacional)": "GBIF Backbone (no explicit entry in the national checklist)",
-
   "BSD-3-Clause (software); dados calculados CC0": "BSD-3-Clause (software); computed data CC0",
   "CC BY 4.0 / Domínio público": "CC BY 4.0 / public domain",
   "CC0 (metadados)": "CC0 (metadata)",
@@ -921,7 +899,6 @@
   "Domínio público / Atribuição aberta (USGS SRTM, NOAA ETOPO1)": "Public domain / open attribution (USGS SRTM, NOAA ETOPO1)",
   "MIT / Atribuição aberta (ChemNet / NuBBE)": "MIT / open attribution (ChemNet / NuBBE)",
   "Metadados públicos (NLM)": "Public metadata (NLM)",
-
   "Cada afirmação traz a licença da sua fonte. Compilação sob CC BY 4.0 (LOTUS CC BY 4.0, UniProt CC BY 4.0, ENA EMBL-Bank Domínio Público, Flora e Funga JBRJ CC BY 4.0, CTFB CC BY 4.0, NPAtlas CC BY 4.0, NuBBE-DB/nubbeKG MIT, Reactome CC BY 4.0, wwPDB/RCSB PDB CC0, Crystallography Open Database COD CC0, AlphaFold CC BY 4.0, ESM Metagenomic Atlas CC BY 4.0), exceto as afirmações derivadas do ChEMBL (atividade medida e efeito clínico), que mantêm CC BY-SA 3.0, e os indicadores de pressão de desmatamento e de área protegida por célula de 0,5° (INPE TerraBrasilis, CNUC, FUNAI), que mantêm CC BY-SA 4.0. As duas licenças exigem compartilhamento pela mesma licença.": "Each claim carries the license of its source. Compilation under CC BY 4.0 (LOTUS CC BY 4.0, UniProt CC BY 4.0, ENA EMBL-Bank public domain, Flora e Funga JBRJ CC BY 4.0, CTFB CC BY 4.0, NPAtlas CC BY 4.0, NuBBE-DB/nubbeKG MIT, Reactome CC BY 4.0, wwPDB/RCSB PDB CC0, Crystallography Open Database COD CC0, AlphaFold CC BY 4.0, ESM Metagenomic Atlas CC BY 4.0), except claims derived from ChEMBL (measured activity and clinical effect), which remain under CC BY-SA 3.0, and the deforestation-pressure and protected-area indicators per 0.5° cell (INPE TerraBrasilis, CNUC, FUNAI), which remain under CC BY-SA 4.0. Both licences require sharing under the same licence.",
   "GNU AGPL-3.0 (dual-licenciado com licença comercial da AMAZONIA WORKS). Nome e marca BioMapaBrasil reservados à AMAZONIA WORKS.": "GNU AGPL-3.0 (dual-licensed, with a commercial license from AMAZONIA WORKS). The BioMapaBrasil name and trademark are reserved to AMAZONIA WORKS.",
   "Registro de base curada; passagem da publicação ainda não lida por curador.": "Record from a curated database; the passage in the publication has not yet been read by a curator.",
@@ -940,16 +917,13 @@
   "Espécie tradicionalmente associada a rapés rituais indígenas (epena/paricá); fora do escopo até haver protocolo CARE acordado.": "Species traditionally associated with Indigenous ritual snuffs (epena/paricá); out of scope until a CARE protocol is agreed.",
   "Sinônimo/táxon afim usado em preparações rituais indígenas; mesmo critério de Virola elongata.": "Synonym or related taxon used in Indigenous ritual preparations; same criterion as Virola elongata.",
   "Espécie associada a preparações rituais indígenas na Amazônia noroeste; fora do escopo até haver protocolo CARE.": "Species associated with Indigenous ritual preparations in the northwestern Amazon; out of scope until a CARE protocol is in place.",
-
   "Um táxon entra no recorte amazônico com pelo menos {n} registros do GBIF nas UFs da Amazônia Legal ({ufs}). A Amazônia Legal administrativa inclui o Maranhão a oeste de 44°W e áreas de Cerrado em MT, TO e MA; por isso o perfil de cada espécie também traz, em separado, os registros no Bioma Amazônia ecológico e no Maranhão a oeste de 44°W. O predomínio amazônico (metade ou mais dos registros brasileiros) é declarado nas duas bases: só registros com UF e todos os registros.": "A taxon enters the Amazonian scope with at least {n} GBIF records in the Legal Amazon states ({ufs}). The administrative Legal Amazon includes Maranhão west of 44°W and Cerrado areas in MT, TO and MA; each profile therefore also reports, separately, the records in the ecological Amazon biome and in Maranhão west of 44°W. Amazonian predominance (half or more of the Brazilian records) is stated on both bases: records with a state only, and all records.",
-
   "«{mol}» é fármaco aprovado (fase 4 no ChEMBL). Indicações registradas: {ind}. Descreve o fármaco isolado, não o organismo de onde a molécula foi isolada.": "“{mol}” is an approved drug (phase 4 in ChEMBL). Indications on record: {ind}. This describes the isolated drug, not the organism from which the molecule was isolated.",
   "«{mol}» é fármaco aprovado (fase 4 no ChEMBL). Indicações registradas: {ind}. Mecanismo registrado: {mec}. Descreve o fármaco isolado, não o organismo de onde a molécula foi isolada.": "“{mol}” is an approved drug (phase 4 in ChEMBL). Indications on record: {ind}. Mechanism on record: {mec}. This describes the isolated drug, not the organism from which the molecule was isolated.",
   "«{mol}» teve aprovação clínica registrada (fase 4 no ChEMBL, com retirada de mercado em jurisdições). Indicações registradas: {ind}. Descreve o fármaco isolado, não o organismo de onde a molécula foi isolada.": "“{mol}” has a clinical approval on record (phase 4 in ChEMBL, with market withdrawal in some jurisdictions). Indications on record: {ind}. This describes the isolated drug, not the organism from which the molecule was isolated.",
   "«{mol}» teve aprovação clínica registrada (fase 4 no ChEMBL, com retirada de mercado em jurisdições). Indicações registradas: {ind}. Mecanismo registrado: {mec}. Descreve o fármaco isolado, não o organismo de onde a molécula foi isolada.": "“{mol}” has a clinical approval on record (phase 4 in ChEMBL, with market withdrawal in some jurisdictions). Indications on record: {ind}. Mechanism on record: {mec}. This describes the isolated drug, not the organism from which the molecule was isolated.",
   "«{mol}» é insumo farmacêutico ou metabólito ubíquo com aprovação clínica (fase 4 no ChEMBL). Indicações registradas: {ind}. Descreve o fármaco isolado, não o organismo de onde a molécula foi isolada.": "“{mol}” is a pharmaceutical ingredient or ubiquitous metabolite with clinical approval (phase 4 in ChEMBL). Indications on record: {ind}. This describes the isolated drug, not the organism from which the molecule was isolated.",
   "«{mol}» é insumo farmacêutico ou metabólito ubíquo com aprovação clínica (fase 4 no ChEMBL). Indicações registradas: {ind}. Mecanismo registrado: {mec}. Descreve o fármaco isolado, não o organismo de onde a molécula foi isolada.": "“{mol}” is a pharmaceutical ingredient or ubiquitous metabolite with clinical approval (phase 4 in ChEMBL). Indications on record: {ind}. Mechanism on record: {mec}. This describes the isolated drug, not the organism from which the molecule was isolated.",
-
   "«{mol}» consta como relatado em {taxon}, com {n} publicação associada no {fonte}.": "“{mol}” is listed as reported in {taxon}, with {n} associated publication in {fonte}.",
   "«{mol}» consta como relatado em {taxon}, com {n} publicações associadas no {fonte}.": "“{mol}” is listed as reported in {taxon}, with {n} associated publications in {fonte}.",
   "«{mol}» consta como relatado em {taxon}, com {n} publicação associada no NuBBE-DB (estado de coleta declarado na base: {uf}).": "“{mol}” is listed as reported in {taxon}, with {n} associated publication in NuBBE-DB (state of collection declared in the database: {uf}).",
@@ -958,19 +932,16 @@
   "«{mol}» consta como isolado em {taxon}, com {n} publicações de origem no NPAtlas.": "“{mol}” is listed as isolated from {taxon}, with {n} source publications in NPAtlas.",
   "O UniProt/Swiss-Prot (Tox-Prot) anota função para {mol} de {taxon}.": "UniProt/Swiss-Prot (Tox-Prot) annotates a function for {mol} from {taxon}.",
   "O UniProt/Swiss-Prot (Tox-Prot) anota função para {mol} de {taxon} (entrada anotada na subespécie {org}).": "UniProt/Swiss-Prot (Tox-Prot) annotates a function for {mol} from {taxon} (entry annotated for the subspecies {org}).",
-
   "Evidência experimental publicada (ECO:0000269)": "Published experimental evidence (ECO:0000269)",
   "Evidência experimental publicada (ECO:0000269) (referência bibliográfica geral da entrada UniProtKB; sem evidência ligada diretamente ao bloco FUNCTION)": "Published experimental evidence (ECO:0000269) (general bibliographic reference of the UniProtKB entry; no evidence linked directly to the FUNCTION block)",
   "Anotação sem evidência experimental direta (similaridade de sequência ou outra inferência)": "Annotation without direct experimental evidence (sequence similarity or other inference)",
   "Anotação sem evidência experimental direta (similaridade de sequência ou outra inferência) (referência bibliográfica geral da entrada UniProtKB; sem evidência ligada diretamente ao bloco FUNCTION)": "Annotation without direct experimental evidence (sequence similarity or other inference) (general bibliographic reference of the UniProtKB entry; no evidence linked directly to the FUNCTION block)",
   "Ensaio ChEMBL": "ChEMBL assay",
   "Mediana de {n} medidas do ChEMBL": "Median of {n} ChEMBL measurements",
-
   "Portaria SVS/MS nº 344/1998": "Brazilian Ordinance SVS/MS No. 344/1998",
   "Lista D1: precursor químico sujeito a controle especial (efedrina/pseudoefedrina).": "List D1: chemical precursor subject to special control (ephedrine/pseudoephedrine).",
   "Lista D2 / Polícia Federal: insumo químico precursor sujeito a controle (safrol). A nota refere-se à substância química isolada, não ao táxon biológico.": "List D2 / Federal Police: precursor chemical subject to control (safrole). The note refers to the isolated chemical substance, not to the biological taxon.",
   "Lista D1: precursor químico sujeito a controle especial (isossafrol). A nota refere-se à substância química isolada, não ao táxon biológico.": "List D1: chemical precursor subject to special control (isosafrole). The note refers to the isolated chemical substance, not to the biological taxon.",
-
   "A pravastatina é obtida por hidroxilação microbiana da mevastatina (compactina, ML-236B), policetídeo fúngico inibidor da HMG-CoA redutase.": "Pravastatin is obtained by microbial hydroxylation of mevastatin (compactin, ML-236B), a fungal polyketide that inhibits HMG-CoA reductase.",
   "A atorvastatina, inibidor totalmente sintético da HMG-CoA redutase, teve como composto-líder inicial a compactina (mevastatina), metabólito fúngico.": "Atorvastatin, a fully synthetic HMG-CoA reductase inhibitor, had the fungal metabolite compactin (mevastatin) as its initial lead compound.",
   "A varfarina saiu da série de anticoagulantes sintetizados a partir do dicumarol, que se forma pela oxidação microbiana da cumarina no feno de trevo-doce mofado.": "Warfarin emerged from the series of anticoagulants synthesized from dicoumarol, which forms by microbial oxidation of coumarin in spoiled sweet clover hay.",
@@ -979,12 +950,18 @@
   "A pentoxifilina, 1-(5-oxo-hexil)-3,7-dimetilxantina, é derivado sintético da teobromina.": "Pentoxifylline, 1-(5-oxohexyl)-3,7-dimethylxanthine, is a synthetic derivative of theobromine.",
   "O ácido acetilsalicílico (aspirina) é a forma acetilada do ácido salicílico, preparada por Felix Hoffmann na Bayer em 1897.": "Acetylsalicylic acid (aspirin) is the acetylated form of salicylic acid, prepared by Felix Hoffmann at Bayer in 1897.",
   "A cevimelina (SNI-2011, AF102B) foi desenhada como análogo rígido da acetilcolina, agonista dos receptores muscarínicos.": "Cevimeline (SNI-2011, AF102B) was designed as a rigid analog of acetylcholine, an agonist of muscarinic receptors.",
-
+  "O artesunato é derivado hemissuccinato semissintético da artemisinina, lactona sesquiterpênica com ponte endoperóxido usada contra a malária por Plasmodium falciparum.": "Artesunate is a semisynthetic hemisuccinate derivative of artemisinin, an endoperoxide sesquiterpene lactone used against Plasmodium falciparum malaria.",
+  "O arteméter é derivado éter metílico semissintético da artemisinina, antimalárico da classe das artemisininas avaliado pela OMS em combinações terapêuticas.": "Artemether is a semisynthetic methyl ether derivative of artemisinin, an artemisinin-class antimalarial evaluated by WHO in combination therapies.",
+  "A amiodarona, antiarrítmico benzofurânico de classe III, teve sua série química inspirada na quelina, furanocromona natural de Ammi visnaga.": "Amiodarone, a class III benzofuran antiarrhythmic agent, was chemically inspired by khellin, a natural furanochromone from Ammi visnaga.",
+  "O cromoglicato dissódico (cromolina), estabilizador de mastócitos de primeira classe, nasceu do programa de modificação estrutural da quelina iniciado nos anos 1950.": "Cromolyn sodium (sodium cromoglycate), a first-in-class mast cell stabilizer, emerged from a structural modification program on khellin begun in the 1950s.",
+  "A dapagliflozina, inibidor seletivo de SGLT2 por ligação C-glicosídica mais estável metabolicamente, foi desenhada a partir do glicosídeo natural florizina.": "Dapagliflozin, a selective C-glucoside SGLT2 inhibitor with greater metabolic stability, was designed from the natural glucoside phlorizin.",
+  "O oseltamivir, pró-fármaco éster inibidor da neuraminidase viral, é sintetizado em escala industrial usando o ácido chiquímico natural como precursor quiral de partida.": "Oseltamivir, an ester prodrug inhibitor of viral neuraminidase, is synthesized industrially from natural shikimic acid as a chiral starting precursor.",
+  "A diidroergotamina é derivado semissintético obtido pela hidrogenação seletiva de uma dupla ligação do sistema ergolina da ergotamina.": "Dihydroergotamine is a semisynthetic derivative obtained by selective hydrogenation of a double bond in the ergoline ring system of ergotamine.",
+  "A diosmina, glicosídeo flavônico flebotônico, é produzida comercialmente por oxidação semissintética da hesperidina, flavanona natural abundante.": "Diosmin, a phlebotonic flavone glycoside, is produced commercially by semisynthetic oxidation of hesperidin, an abundant natural flavanone.",
   "Impressões digitais circulares Morgan ECFP4 (2048 bits, raio 2, similaridade de Tanimoto) projetadas em 2D com inicialização espectral laplaciana determinística (semente 20261111) + árvore geradora mínima (TMAP).": "Morgan ECFP4 circular fingerprints (2048 bits, radius 2, Tanimoto similarity) projected in 2D with deterministic Laplacian spectral initialization (seed 20261111), plus a minimum spanning tree (TMAP).",
   "Proximidade no espaço químico é similaridade topológica 2D (Tanimoto ECFP4) entre estruturas. Alvo farmacológico e efeito clínico são outros registros, com fonte própria.": "Proximity in chemical space is 2D topological similarity (Tanimoto, ECFP4) between structures. Pharmacological target and clinical effect are separate records, each with its own source.",
   "Sem classe atribuída": "No class assigned",
   "Fármaco sintético/semissintético bioinspirado": "Bioinspired synthetic or semisynthetic drug",
-
   "01 · Bacia hidrográfica": "01 · River basin",
   "02 · Família biológica": "02 · Biological family",
   "03 · Classe molecular isolada": "03 · Class of the isolated molecule",
@@ -1001,7 +978,6 @@
   "Via": "Pathway",
   "Alvo": "Target",
   "Fármaco": "Drug",
-
   "O estrato vertical vem dos perfis de forma de vida e hábitat publicados na Flora e Funga do Brasil (JBRJ), no Catálogo Taxonômico da Fauna do Brasil (CTFB) e no GBIF. Espécie sem registro de estrato fica em 'Estrato não informado na fonte'.": "The vertical stratum comes from the life-form and habitat profiles published in Flora e Funga do Brasil (JBRJ), the Catálogo Taxonômico da Fauna do Brasil (CTFB) and GBIF. A species with no stratum on record is placed under ‘Stratum not recorded in the source’.",
   "Árvores que ultrapassam o dossel contínuo.": "Trees that rise above the continuous canopy.",
   "Árvores da copa contínua da floresta.": "Trees of the continuous forest canopy.",
@@ -1014,7 +990,6 @@
   "Macrófitas, árvores de áreas periodicamente inundadas e fauna aquática.": "Macrophytes, trees of periodically flooded areas and aquatic fauna.",
   "Estrato não informado na fonte": "Stratum not recorded in the source",
   "Espécies sem perfil vertical nas bases consultadas. O estrato não é inferido.": "Species with no vertical profile in the databases consulted. The stratum is not inferred.",
-
   "Impressão química / toxínica": "Chemical or toxin fingerprint",
   "Classe química ou família molecular predominante nos registros públicos do táxon.": "Predominant chemical class or molecular family in the public records of the taxon.",
   "Maior potência in vitro entre as moléculas (pChEMBL)": "Highest in vitro potency among the molecules (pChEMBL)",
@@ -1031,7 +1006,6 @@
   "(família não atribuída)": "(family not assigned)",
   "(gênero não atribuído)": "(genus not assigned)",
   "Endemismo no Brasil (Flora e Funga do Brasil / CTFB) e fração dos registros brasileiros do GBIF que está na Amazônia Legal.": "Endemism in Brazil (Flora e Funga do Brasil / CTFB) and the fraction of Brazilian GBIF records that lies in the Legal Amazon.",
-
   "Norte": "North",
   "Nordeste": "Northeast",
   "Centro-Oeste": "Central-West",
@@ -1039,11 +1013,9 @@
   "Sul": "South",
   "Amazônia": "Amazon",
   "Mata Atlântica": "Atlantic Forest",
-
   "subespécie": "subspecies",
   "variedade": "variety",
   "forma": "form",
-
   "Arbusto": "Shrub",
   "Subarbusto": "Subshrub",
   "Erva": "Herb",
@@ -1104,13 +1076,11 @@
   "ECTOPARASITO": "ectoparasite",
   "CAVERNICOLA": "cave-dwelling",
   "MARINHO": "marine",
-
   "Liana amazônica de que foi isolada a (+)-tubocurarina, ponto de partida dos bloqueadores neuromusculares. O perfil traz as estruturas isoladas e os ensaios publicados; preparações tradicionais de curare não são descritas.": "Amazonian liana from which (+)-tubocurarine was isolated, the starting point of the neuromuscular blocking agents. The profile gives the isolated structures and the published assays; traditional curare preparations are not described.",
   "Árvore de várzea e igapó (ucuúba-branca), estudada pelas lignanas e neolignanas. O perfil reúne os metabólitos publicados em periódicos científicos. Outras espécies de Virola, de uso ritual, ficam fora da plataforma.": "Floodplain tree of várzea and igapó forests (ucuúba-branca), studied for its lignans and neolignans. The profile gathers the metabolites published in scientific journals. Other Virola species, of ritual use, are outside the platform.",
   "Liana amazônica da família Menispermaceae, com alcaloides bisbenzilisoquinolínicos descritos na literatura química. O perfil traz as moléculas isoladas; preparações tradicionais não são descritas.": "Amazonian liana of the family Menispermaceae, with bisbenzylisoquinoline alkaloids described in the chemical literature. The profile gives the isolated molecules; traditional preparations are not described.",
   "Liana neotropical de que foram isolados a C-toxiferina I e outros alcaloides indólicos bisquaternários. O perfil traz as moléculas isoladas e os alvos moleculares publicados; preparações tradicionais não são descritas.": "Neotropical liana from which C-toxiferine I and other bisquaternary indole alkaloids were isolated. The profile gives the isolated molecules and the published molecular targets; traditional preparations are not described.",
   "Liana amazônica com alcaloides indólicos descritos na literatura fitoquímica. O perfil traz as moléculas isoladas; preparações tradicionais não são descritas.": "Amazonian liana with indole alkaloids described in the phytochemical literature. The profile gives the isolated molecules; traditional preparations are not described.",
-
   "Confôrmero": "Conformer",
   "Coordenadas baixadas.": "Coordinates downloaded.",
   "Baixar XYZ": "Download XYZ",
@@ -1148,6 +1118,7 @@
   "A estrutura contém mais de um componente.": "The structure contains multiple components.",
   "Composição fora da faixa validada.": "The composition is outside the validated range.",
   "Parâmetros MMFF94s indisponíveis.": "MMFF94s parameters are unavailable.",
+  "ETKDGv3 (energia MMFF94s)": "ETKDGv3 (MMFF94s energy)",
   "Identidade química incompleta.": "The chemical identity is incomplete.",
   "Identidade química sem confirmação.": "The chemical identity could not be confirmed.",
   "Sem coordenadas 3D verificadas para este registro.": "This record has no verified 3D coordinates.",
@@ -1156,5 +1127,50 @@
   "Átomos pesados medidos por cristalografia. Hidrogênios adicionados por RDKit. Medidas envolvendo H incluem posições inferidas.": "Heavy atoms measured by crystallography. RDKit added hydrogens. Measurements involving H include inferred positions.",
   "Coordenadas do modelo depositado. A resolução pertence à entrada experimental. A origem de cada hidrogênio pode variar.": "Coordinates from the deposited model. Resolution describes the experimental entry. The origin of individual hydrogen positions can vary.",
   "Arquivo legado. Cargas e atribuições ausentes aparecem sem registro. A estereoquímica anotada no modelo pode ser inferida da geometria.": "Legacy file. Missing charges and assignments are marked unrecorded. Model stereochemistry may be inferred from its geometry.",
-  "Modelo de uma molécula isolada. Esta pose não determina sua conformação em solução.": "Isolated molecule model. Its solution conformation is undetermined."
+  "Modelo de uma molécula isolada. Esta pose não determina sua conformação em solução.": "Isolated molecule model. Its solution conformation is undetermined.",
+  "SUB-BACIA HIDROGRÁFICA": "HYDROGRAPHIC SUB-BASIN",
+  "Sub-bacia": "Sub-basin",
+  "Sub-bacia hidrográfica": "Hydrographic sub-basin",
+  "Sub-bacia não encontrada.": "Sub-basin not found.",
+  "Registros na sub-bacia": "Records in the sub-basin",
+  "{n} táxon registrado na sub-bacia": "{n} taxon recorded in the sub-basin",
+  "{n} táxons registrados na sub-bacia": "{n} taxa recorded in the sub-basin",
+  "táxons no recorte com registro na sub-bacia": "taxa in scope with records in the sub-basin",
+  "registros do GBIF desses táxons na sub-bacia": "GBIF records for these taxa in the sub-basin",
+  "área na Amazônia Legal": "area in the Legal Amazon",
+  "Famílias mais frequentes": "Most frequent families",
+  "{n} na sub-bacia": "{n} in the sub-basin",
+  "Tabela de espécies desta sub-bacia": "Species table for this sub-basin",
+  "Estrato florestal": "Forest stratum",
+  "Espécies aceitas sem química aberta nos catálogos nacionais": "Accepted species without open chemistry records in national catalogs",
+  "Comparação entre as espécies aceitas no Bioma Amazônia (Flora e Funga do Brasil e CTFB) e as moléculas relatadas em bases abertas.": "Comparison between accepted species in the Amazon biome (Flora and Funga of Brazil and CTFB) and molecules reported in open databases.",
+  "espécies aceitas no Bioma Amazônia": "accepted species in the Amazon biome",
+  "{n} espécies sem química aberta": "{n} species without open chemistry",
+  "endêmicas do Brasil sem química aberta": "endemic to Brazil without open chemistry",
+  "Aceitas": "Accepted",
+  "Com química": "With chemistry",
+  "Sem química": "Without chemistry",
+  "Fauna (demais grupos)": "Fauna (other groups)",
+  "Gêneros prioritários sem química aberta": "Priority genera without open chemistry",
+  "Gêneros prioritários com espécies amazônicas sem química aberta": "Priority genera with Amazonian species lacking open chemistry",
+  "Filtros de gêneros prioritários": "Priority genera filters",
+  "Gênero ou família": "Genus or family",
+  "filtrar gênero ou família": "filter genus or family",
+  "Somente com endêmicas do Brasil": "Only with Brazilian endemics",
+  "Sem química / Total": "Without chemistry / Total",
+  "Endêmicas s/ química": "Endemic w/o chemistry",
+  "Exemplos": "Examples",
+  "Todas": "All",
+  "nome, BMB 00616, InChIKey, fórmula ou classe": "name, BMB 00616, InChIKey, formula or class",
+  "Portal externo NuBBE instável; clique para copiar o código": "External NuBBE portal unstable; click to copy the identifier",
+  "Estereoisômero com estrutura 3D disponível": "Stereoisomer with 3D structure available",
+  "Código-fonte (GNU AGPL-3.0)": "Source code (GNU AGPL-3.0)",
+  "Código-fonte correspondente completo desta versão, nos termos da licença GNU AGPL-3.0.": "Complete corresponding source code for this release under the GNU AGPL-3.0 license.",
+  "Releases públicas": "Public releases",
+  "registro público de edições (Issues)": "public issue tracker",
+  "Foco no espaço químico": "Focus in chemical space",
+  "Abrir perfil": "Open profile",
+  "Vizinhos estruturais diretos na árvore TMAP (clique para focar):": "Direct structural neighbors in the TMAP tree (click to focus):",
+  "Nenhum vizinho TMAP registrado neste recorte.": "No TMAP neighbors recorded in this subset.",
+  "ΔE = {de} kcal/mol · peso de Boltzmann a 298,15 K (vácuo MMFF94s): {w}%.": "ΔE = {de} kcal/mol · Boltzmann weight at 298.15 K (MMFF94s vacuum): {w}%."
 }

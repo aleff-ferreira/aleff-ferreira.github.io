@@ -388,7 +388,10 @@ export function criarMapa(raiz, geo, { aoEscolherUF }) {
     dica.hidden = false;
   });
   gBacias.addEventListener('pointerleave', () => { dica.hidden = true; });
-  gBacias.addEventListener('click', () => { location.hash = '#/fluxo'; });
+  gBacias.addEventListener('click', (e) => {
+    const alvo = e.target.closest('[data-bacia]');
+    location.hash = alvo?.dataset.bacia ? `#/bacia/${alvo.dataset.bacia}` : '#/fluxo';
+  });
   gUFs.addEventListener('pointerleave', () => {
     terreno.setEstadoFoco({ foco: null });
     dica.hidden = true;

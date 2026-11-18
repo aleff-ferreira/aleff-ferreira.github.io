@@ -1,14 +1,15 @@
 // BioMapaBrasil, um produto da Amazonia Works. Licenciado conforme LICENSE e NOTICE.md.
 // Inicialização, roteador por hash (links compartilháveis) e a trilha território → espécie → molécula → ação.
-import { $, $$, esc, icone, anunciar, fmtData, fmtInt, GRUPOS, reduzMovimento, conexaoLenta, alternarIdioma, traduzirDOM, idiomaAtual, tr, trn, semPredominio } from './util.js';
+import { $, $$, esc, icone, anunciar, fmtData, fmtInt, GRUPOS, reduzMovimento, conexaoLenta, alternarIdioma, traduzirDOM, idiomaAtual, tr, trn, semPredominio, nomeMolecula } from './util.js';
 import * as dados from './dados.js';
 import { criarMapa } from './mapa.js';
 import { criarBusca } from './busca.js';
 import { montarConstelacao, animarContadores, movimentoPausado } from './constelacao.js';
 import * as perfis from './perfis.js';
 
-let _modPaginas;
+let _modPaginas, _modDetMol;
 const carregarPaginas = () => (_modPaginas ||= import('./viz/paginas.js'));
+const carregarDetMol = () => (_modDetMol ||= import('./viz/detalhe_mol.js'));
 
 const el = {
   mapa: $('#mapa'), corpo: $('#painel-corpo'), trilha: $('#trilha'), vistaMapa: $('#vista-mapa'), vistaPagina: $('#vista-pagina'),
@@ -189,6 +190,7 @@ function pintarPainel({ titulo, corpo }, { animar = true } = {}) {
     indice: estado.indice,
     ufs: estado.ufs,
     filtroGrupos: estado.filtroGrupos,
+    filtros: estado.filtros,
     aoNavegar: (href) => { location.hash = href; },
   });
   depoisDeRenderizar(titulo, animar);
@@ -260,11 +262,11 @@ async function rotaEspecie(gbif, molId) {
     }
     if (el.telemetria) el.telemetria.textContent = `GBIF ${pack.gbif} · ${pack.nome.toUpperCase().slice(0, 22)}`;
     if (molId) {
-      const molPack = await dados.molecula(molId);
+      const [molPack, detMol] = await Promise.all([dados.molecula(molId), carregarDetMol()]);
       if (meu !== estado.token) return;
-      estado.molItem = { id: molPack.id, nome: molPack.nome };
+      estado.molItem = { id: molPack.id, nome: nomeMolecula(molPack.nome, molPack.id) };
       estado.resumoAcao = resumoAcao(molPack);
-      ultimoRender = () => { renderTrilha(3); pintarPainel(perfis.renderMolecula({ pack: molPack, taxonCtx: Number(gbif) })); };
+      ultimoRender = () => { renderTrilha(3); pintarPainel(detMol.renderMolecula({ pack: molPack, taxonCtx: Number(gbif) })); };
     } else {
       let mostrarMais = false, filtroMol = '', paginasCarregadas = false;
       const carregarExtrasTaxon = async () => {
@@ -308,12 +310,12 @@ async function rotaMolecula(id) {
   mostrarVista('mapa', true); marcarMenu('moleculas');
   renderTrilha(2); carregando();
   try {
-    const pack = await dados.molecula(id);
+    const [pack, detMol] = await Promise.all([dados.molecula(id), carregarDetMol()]);
     if (meu !== estado.token) return;
-    estado.molItem = { id: pack.id, nome: pack.nome };
+    estado.molItem = { id: pack.id, nome: nomeMolecula(pack.nome, pack.id) };
     estado.resumoAcao = resumoAcao(pack);
     if (el.telemetria) el.telemetria.textContent = `${(pack.inchikey || pack.nome).slice(0, 14)} · ${tr('MOLÉCULA')}`;
-    ultimoRender = () => { renderTrilha(3); pintarPainel(perfis.renderMolecula({ pack, taxonCtx: null })); };
+    ultimoRender = () => { renderTrilha(3); pintarPainel(detMol.renderMolecula({ pack, taxonCtx: null })); };
     ultimoRender();
   } catch (e) { erro(e, () => rotear()); }
 }
@@ -326,8 +328,34 @@ function resumoAcao(m) {
   return partes.length ? partes.join(' · ') : tr('sem registro');
 }
 
+async function rotaBacia(baciaId) {
+  const meu = ++estado.token;
+  estado.uf = null; estado.taxonItem = null; estado.molItem = null; estado.resumoAcao = null;
+  mostrarVista('mapa'); marcarMenu('mapa');
+  estado.mapa.selecionar(null); estado.mapa.camada('lacunas', false); mapaOverview();
+  mapaOverview(); estado.mapa.focarAmazonia();
+  if (el.telemetria) el.telemetria.textContent = tr('SUB-BACIA HIDROGRÁFICA');
+  carregando();
+  try {
+    const [ix, baciasGeo, paginas] = await Promise.all([
+      estado.indice.parcial ? dados.indice() : estado.indice,
+      dados.geoBacias(),
+      carregarPaginas(),
+    ]);
+    if (meu !== estado.token) return;
+    estado.indice = ix;
+    mapaOverview();
+    ultimoRender = () => {
+      renderTrilha(0);
+      pintarPainel(paginas.renderBacia({ baciaId, baciasGeo, indice: estado.indice, filtroGrupos: estado.filtroGrupos, filtros: estado.filtros }));
+    };
+    ultimoRender();
+  } catch (e) { erro(e, () => rotear()); }
+}
+
 // ───────── lacunas ─────────
 async function rotaLacunas() {
+  const meu = ++estado.token;
   estado.uf = null; estado.taxonItem = null; estado.molItem = null; estado.resumoAcao = null;
   mostrarVista('mapa'); marcarMenu('lacunas');
   estado.mapa.selecionar(null); estado.mapa.camada('lacunas', true); estado.mapa.camada('al', true);
@@ -336,7 +364,12 @@ async function rotaLacunas() {
   if (el.telemetria) el.telemetria.textContent = tr('GRADE DE 0,5° · LACUNAS DE COLETA');
   renderTrilha(0); carregando();
   try {
-    const [grade, paginas] = await Promise.all([dados.geoLacunas(), carregarPaginas()]);
+    const [grade, materiaEscura, paginas] = await Promise.all([
+      dados.geoLacunas(),
+      dados.viz('materia_escura').catch(() => null),
+      carregarPaginas(),
+    ]);
+    if (meu !== estado.token) return;
     const ix = Object.fromEntries(grade.colunas.map((c, i) => [c, i]));
     const por = new Map();
     let total = 0, zero = 0, poucas = 0, criticas = 0, protegidas = 0;
@@ -355,7 +388,10 @@ async function rotaLacunas() {
       por.set(sigla, r);
     }
     const porUF = [...por.values()].sort((a, b) => b.poucas / b.celulas - a.poucas / a.celulas);
-    ultimoRender = () => pintarPainel(paginas.renderLacunas({ resumo: { total, zero, poucas, criticas, protegidas, consultas: grade.consultas || [], porUF } }));
+    ultimoRender = () => {
+      pintarPainel(paginas.renderLacunas({ resumo: { total, zero, poucas, criticas, protegidas, consultas: grade.consultas || [], porUF }, materiaEscura }));
+      paginas.hidratarLacunas(el.corpo, materiaEscura);
+    };
     ultimoRender();
   } catch (e) { erro(e, () => rotear()); }
 }
@@ -385,10 +421,11 @@ function rotear() {
   try {
     if (caminho === '/' || caminho === '') return rotaVisaoGeral();
     if ((m = caminho.match(/^\/uf\/([A-Za-z]{2})$/))) return rotaUF(m[1].toUpperCase());
+    if ((m = caminho.match(/^\/bacia\/([a-z0-9_]+)$/i))) return rotaBacia(m[1].toLowerCase());
     if ((m = caminho.match(/^\/especie\/(\d+)(?:\/molecula\/(\d+))?$/))) return rotaEspecie(m[1], m[2]);
     if ((m = caminho.match(/^\/molecula\/(\d+)$/))) return rotaMolecula(m[1]);
     if (caminho === '/lacunas') return rotaLacunas();
-    if (caminho === '/galaxia') return pagina('galaxia', 'Espaço químico', (r) => import('./viz/galaxia_quimica.js').then((m) => m.montarGalaxia(r)));
+    if (caminho === '/galaxia') return pagina('galaxia', 'Espaço químico', (r) => import('./viz/galaxia_quimica.js').then((m) => m.montarGalaxia(r, params)));
     if (caminho === '/fluxo') return pagina('fluxo', 'Fluxos e linhagens', (r) => import('./viz/fluxo_farmacologico.js').then((m) => m.montarFluxo(r)));
     if (caminho === '/floresta') return pagina('floresta', 'Estratos florestais', (r) => import('./viz/raiox_floresta.js').then((m) => m.montarFloresta(r)));
     if (caminho === '/filoquimica') return pagina('filoquimica', 'Quimiotaxonomia', (r) => import('./viz/filoquimica.js').then((m) => m.montarFiloquimica(r)));
@@ -500,7 +537,7 @@ async function iniciar() {
   const primeiraMol = location.hash.match(/\/molecula\/(\d+)(?:$|[/?])/);
   if (primeiraMol) {
     mostrarVista('mapa', true);
-    dados.molecula(Number(primeiraMol[1])).then(pack => {
+    Promise.all([dados.molecula(Number(primeiraMol[1])), carregarDetMol()]).then(([pack]) => {
       const e = pack.estruturas_3d?.[0];
       if (e) return Promise.all([import('./viz/estrutura3d.js'), dados.estrutura3d(e.arquivo, e.sha256)]);
     }).catch(() => {}); // A rota apresenta o estado de erro da requisição principal.
