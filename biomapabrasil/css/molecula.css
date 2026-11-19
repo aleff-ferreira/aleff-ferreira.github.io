@@ -22,7 +22,7 @@ html[data-cena-molecular] .grao { display:none; }
 .mol-barra-topo .alternador-vista { border:1px solid #9bb8b45c; border-radius:28px; background:#142929b5; padding:3px; }
 .mol-barra-topo .alternador-vista button { border-radius:20px; color:#e2eeea; min-width:2.65rem; min-height:1.85rem; }
 .mol-barra-topo .alternador-vista button[aria-pressed="true"] { background:#dcf4df; color:#1c3932; box-shadow:none; }
-.mol-cab-cena { position:absolute; z-index:2; left:var(--margem-cena); top:4.1rem; height:calc(var(--altura-cena) - 7.8rem); width:min(38%,34rem); display:flex; flex-direction:column; justify-content:center; overflow:hidden; pointer-events:none; }
+.mol-cab-cena { position:absolute; z-index:2; left:var(--margem-cena); top:4.1rem; height:calc(var(--altura-cena) - 7.8rem); width:min(calc(39% - var(--margem-cena) - .75rem),34rem); display:flex; flex-direction:column; justify-content:center; overflow:hidden; pointer-events:none; }
 .mol-registro { margin:0 0 .75rem; display:flex; gap:.5rem; align-items:center; font:500 .7rem var(--mono); letter-spacing:.12em; text-transform:uppercase; color:#a9ceba; flex:none; }
 .mol-registro svg { width:18px; height:18px; }
 .mol-cab-cena h2 { margin:0; font:400 clamp(2.2rem,4.1vw,4.4rem)/1.06 var(--serif); color:#f2f5e9; letter-spacing:-.035em; overflow-wrap:break-word; word-break:normal; }
@@ -74,9 +74,13 @@ html[data-cena-molecular] .grao { display:none; }
 .mol-espera { display:flex; justify-content:center; align-items:center; padding-left:36%; }
 .mol-dossie { max-width:85rem; margin:auto; padding-block:1.3rem 3rem; }
 .mol-dossie .cab-perfil { margin-top:0; }
-.mol-abertura .lab3d-expandido { position:fixed; z-index:999; inset:0; overflow:auto; display:block; }
-.lab3d-expandido .mol-campo { height:82svh; }
-.mol-abertura .lab3d-expandido .lab3d-palco { inset:4% 0 8%; }
+.mol-dossie .chips .badge { max-width:100%; white-space:normal; }
+html[data-cena-expandida] { overflow:hidden; }
+html[data-cena-expandida] .painel { container-type:normal; }
+html[data-cena-expandida] main,html[data-cena-expandida] .mol-abertura { z-index:120; }
+.mol-abertura .lab3d-bloco.lab3d-expandido { position:fixed; z-index:1000; inset:0; border-radius:0; overflow:auto; display:flex; flex-direction:column; background:var(--bg); }
+.lab3d-expandido .mol-campo { flex:1 0 72svh; min-height:22rem; height:auto; }
+.mol-abertura .lab3d-expandido .lab3d-palco { inset:3% 2% 9%; }
 @media(max-width:700px) {
   .mol-abertura { --altura-cena:clamp(28.5rem,66svh,37rem); --margem-cena:1.15rem; }
   .mol-barra-topo { top:.65rem; }

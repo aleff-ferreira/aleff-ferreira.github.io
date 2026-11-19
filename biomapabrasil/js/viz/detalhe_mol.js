@@ -188,10 +188,16 @@ export function renderMolecula({ pack, taxonCtx }) {
   const estereo = nEst == null ? '' : nEst === 0 ? tr('Nenhum estereocentro')
     : nIndef > 0 ? (nEst === 1 ? tr('1 estereocentro, sem configuração definida') : tr('{i} de {n} estereocentros sem configuração definida', { i: fmtInt(nIndef), n: fmtInt(nEst) }))
       : trn(nEst, '{n} estereocentro, com configuração definida', '{n} estereocentros, todos com configuração definida');
+  const trMet3d = (met) => String(met || '')
+    .replace('energia MMFF94s', tr('energia MMFF94s'))
+    .replace('estereoisômero representativo', tr('estereoisômero representativo'))
+    .replace('resíduos X modelados como Ala', tr('resíduos X modelados como Ala'))
+    .replace('sequência madura UniProt', tr('sequência madura UniProt'))
+    .replace('Átomo/íon monoatômico em origem canônica', tr('Átomo/íon monoatômico em origem canônica'));
   const natureza3d = estPrim && {
     experimental: ['ok', '3D experimental', estPrim.fonte === 'cod' ? 'Crystallography Open Database' : 'wwPDB'],
-    predicao_computacional: ['alerta', '3D predita', estPrim.metodo || ''],
-    conformero_calculado: ['ind', 'Confôrmero 3D calculado', estPrim.metodo || 'RDKit ETKDGv3'],
+    predicao_computacional: ['alerta', '3D predita', trMet3d(estPrim.metodo || '')],
+    conformero_calculado: ['ind', 'Confôrmero 3D calculado', trMet3d(estPrim.metodo || 'RDKit ETKDGv3')],
   }[estPrim.natureza];
   const fq = pack.fisico_quimica;
 

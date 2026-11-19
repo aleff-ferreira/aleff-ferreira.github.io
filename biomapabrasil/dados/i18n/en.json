@@ -1182,5 +1182,7 @@
   "Guiana Francesa": "French Guiana",
   "energia MMFF94s": "MMFF94s energy",
   "estereoisômero representativo": "representative stereoisomer",
-  "resíduos X modelados como Ala": "X residues modeled as Ala"
+  "resíduos X modelados como Ala": "X residues modeled as Ala",
+  "sequência madura UniProt": "UniProt mature sequence",
+  "Átomo/íon monoatômico em origem canônica": "Monoatomic atom/ion at canonical origin"
 }

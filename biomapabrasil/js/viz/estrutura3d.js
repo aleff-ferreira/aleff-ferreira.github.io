@@ -114,12 +114,14 @@ function temaClaro() {
   return raiz.dataset.tema === 'claro' && !raiz.hasAttribute('data-cena-molecular');
 }
 
-function traduzirMetodo3D(met) {
+export function traduzirMetodo3D(met) {
   if (!met) return '';
   return String(met)
     .replace('energia MMFF94s', tr('energia MMFF94s'))
     .replace('estereoisômero representativo', tr('estereoisômero representativo'))
-    .replace('resíduos X modelados como Ala', tr('resíduos X modelados como Ala'));
+    .replace('resíduos X modelados como Ala', tr('resíduos X modelados como Ala'))
+    .replace('sequência madura UniProt', tr('sequência madura UniProt'))
+    .replace('Átomo/íon monoatômico em origem canônica', tr('Átomo/íon monoatômico em origem canônica'));
 }
 
 // ═══════════════════════ Descompressor RFC-1951 (DEFLATE bruto) + Codec BM32 ═══════════════════════
@@ -2371,6 +2373,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     else if (e.key === 'Escape' && expandido) {
       expandido = false;
       raizBloco.classList.remove('lab3d-expandido');
+      delete document.documentElement.dataset.cenaExpandida;
       container.querySelector('[data-3d="expandir"]')?.setAttribute('aria-pressed', 'false');
       pedirQuadro(false);
     }
@@ -2471,6 +2474,8 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     } else if (ac === 'expandir') {
       expandido = !expandido;
       raizBloco.classList.toggle('lab3d-expandido', expandido);
+      if (expandido) document.documentElement.dataset.cenaExpandida = '1';
+      else delete document.documentElement.dataset.cenaExpandida;
       bAc.setAttribute('aria-pressed', String(expandido));
       setTimeout(() => pedirQuadro(false), 30);
     } else if (ac === 'foto') {
@@ -2514,6 +2519,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       e.preventDefault();
       expandido = false;
       raizBloco.classList.remove('lab3d-expandido');
+      delete document.documentElement.dataset.cenaExpandida;
       const btnExp = container.querySelector('[data-3d="expandir"]');
       btnExp?.setAttribute('aria-pressed', 'false');
       btnExp?.focus();
@@ -2539,6 +2545,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   const remover = new MutationObserver(() => {
     if (container.isConnected) return;
     ativo = false; versaoCarga++; cancelAnimationFrame(raf); clearTimeout(reconstituir);
+    if (expandido) delete document.documentElement.dataset.cenaExpandida;
     tamanhos.disconnect(); aparicao.disconnect(); remover.disconnect(); vida.abort();
     motorGL?.gl.getExtension('WEBGL_lose_context')?.loseContext();
   });
