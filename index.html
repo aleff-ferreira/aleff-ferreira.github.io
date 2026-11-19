@@ -39,7 +39,7 @@
 *{margin:0;padding:0}
 html{background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-family:var(--f-body);font-weight:300;font-size:16px;line-height:1.6;color:var(--ink);background:var(--bg);overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
-@supports (overflow:clip){body{overflow-x:clip}}
+@supports (overflow:clip){html,body{overflow-x:clip}}
 a{color:inherit;text-decoration:none}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0}
@@ -610,7 +610,9 @@ a.val:hover{color:var(--pink)}
 @media (max-width:600px){.fc-x{display:none}}
 @media (max-width:420px){.val .ext{display:none}}
 @media (max-width:380px){
-  .dock .brand span{letter-spacing:.1em}
+  .dock{max-width:100%}.dock .brand{padding-right:8px}.dock .brand span{letter-spacing:.08em}
+  .menu-btn{padding:9px 13px}
+  .plate figcaption{top:calc(4.45% + 5px);padding:3px 5px;font-size:10px;letter-spacing:.1em}
   .corner,.motion-toggle{letter-spacing:.06em}
 }
 html.rm .hero-wrap{height:auto}
@@ -1619,7 +1621,7 @@ html.rm .spec:hover::after{animation:none}
     c.setTransform(dpr * s, 0, 0, dpr * s, 0, 0);
     return { c: c, s: s, H: h / s, w: w };
   }
-  function monoFont(px, s, wgt) { return (wgt || 500) + ' ' + (px / s).toFixed(2) + 'px "JetBrains Mono", ui-monospace, monospace'; }
+  function monoFont(px, s, wgt) { return (wgt || 500) + ' ' + (px / Math.max(s, 0.78)).toFixed(2) + 'px "JetBrains Mono", ui-monospace, monospace'; }
   function plateFrame(c, s, H, rnd, tagline) {
     var i, lw = 1 / s;
     c.save();
@@ -1686,9 +1688,10 @@ html.rm .spec:hover::after{animation:none}
     var picks = [], labels = ['OBS', 'CMS', 'API', 'DADOS'];
     c.font = monoFont(9, s, 500); c.fillStyle = inkA(0.72); c.textBaseline = 'middle';
     var maxW = Math.max.apply(null, labels.map(function (t) { return c.measureText(t).width; }));
-    function pickFrom(list, side) { var got = 0; for (var q = 0; q < list.length && got < 2; q++) { var n3 = list[q]; if (n3.y < 38 || n3.y > H - 26) continue;
+    function pickFrom(list, side) { var got = 0, sT = Math.max(s, 0.78), yTop = Math.max(38, Math.min(56, 9 + 29 / s)), yBot = side > 0 ? Math.min(H - 28, H - 22 - 14 / sT) : H - 26;
+      for (var q = 0; q < list.length && got < 2; q++) { var n3 = list[q]; if (n3.y < yTop || n3.y > yBot) continue;
       if (side > 0 ? n3.x + 16 + maxW > 304 : n3.x - 16 - maxW < 16) continue;
-      var bx0 = side > 0 ? n3.x + 3 : n3.x - 18 - maxW, bx1 = side > 0 ? n3.x + 18 + maxW : n3.x - 3, lh = 8 / s;
+      var bx0 = side > 0 ? n3.x + 3 : n3.x - 18 - maxW, bx1 = side > 0 ? n3.x + 18 + maxW : n3.x - 3, lh = 8 / sT;
       if (nodes.some(function (o) { return o !== n3 && o.x > bx0 - 4 && o.x < bx1 + 4 && Math.abs(o.y - n3.y) < lh + 4; })) continue;
       if (picks.some(function (u) { return Math.abs(u.n.y - n3.y) < 34 && u.side === side; })) continue; picks.push({ n: n3, side: side }); got++; } }
     pickFrom(byX, -1); pickFrom(byX.slice().reverse(), 1);
@@ -1780,8 +1783,8 @@ html.rm .spec:hover::after{animation:none}
     riverPath(); c.strokeStyle = inkA(0.92); c.lineWidth = 11; c.stroke();
     riverPath(); c.strokeStyle = 'rgba(238,234,226,.35)'; c.lineWidth = 0.7 / s; c.setLineDash([6 / s, 5 / s]); c.stroke(); c.setLineDash([]);
     c.font = monoFont(9, s, 500); c.fillStyle = 'rgba(120,86,34,.95)'; c.textAlign = 'left'; c.textBaseline = 'middle';
-    var lp = pts[92], lt = 'COTA 1 · 2 · 3', lx = Math.min(236, lp[0] + 8), ly = Math.max(26, lp[1] - 46), lw2 = c.measureText(lt).width;
-    c.fillStyle = 'rgba(238,234,226,.92)'; c.fillRect(lx - 4 / s, ly - 7 / s, lw2 + 8 / s, 14 / s);
+    var lp = pts[92], lt = 'COTA 1 · 2 · 3', sR = Math.max(s, 0.78), lw2 = c.measureText(lt).width, lx = Math.min(236, 306 - lw2 - 4 / sR, lp[0] + 8), ly = Math.max(26, Math.min(38, 10 + 34 / s), lp[1] - 46);
+    c.fillStyle = 'rgba(238,234,226,.92)'; c.fillRect(lx - 4 / sR, ly - 7 / sR, lw2 + 8 / sR, 14 / sR);
     c.fillStyle = 'rgba(120,86,34,.95)'; c.fillText(lt, lx, ly);
     c.restore();
   }
@@ -1901,7 +1904,7 @@ html.rm .spec:hover::after{animation:none}
     });
     c.font = monoFont(8.5, s, 500); c.fillStyle = inkA(0.62);
     c.textAlign = 'left'; c.textBaseline = 'bottom'; c.fillText('0,5° · 1.230 TÁXONS', 20, H - 15);
-    c.textAlign = 'right'; c.textBaseline = 'top'; c.fillText('11.908 MOL · InChIKey', 302, 34);
+    c.textAlign = 'right'; c.textBaseline = 'top'; c.fillText('11.908 MOL · InChIKey', 302, Math.max(34, Math.min(49, 9 + 26 / s)));
     c.restore();
   }
   var PLATES = {
