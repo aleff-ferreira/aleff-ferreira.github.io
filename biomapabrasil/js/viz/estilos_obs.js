@@ -529,7 +529,7 @@ export function garantirEstilosObservatorio() {
     height: auto;
     min-height: 320px;
   }
-  :root[data-tema="claro"] .lab3d-palco {
+  :root[data-tema="claro"]:not([data-cena-molecular]) .lab3d-palco {
     background:
       radial-gradient(ellipse 70% 60% at 50% 42%, #fcfbf7 0%, #efe9dc 62%, #ded6c5 100%);
   }

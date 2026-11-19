@@ -130,6 +130,14 @@ export function renderMolecula({ pack, taxonCtx }) {
   const estPrim = tem3d ? pack.estruturas_3d[0] : null;
   const ikNome = ehInchiKey(pack.nome);
   const tituloMol = nomeMolecula(pack.nome, pack.id);
+  const maxToken = Math.max(0, ...tituloMol.split(/[\s,;/-]+/).map((p) => p.length));
+  const classeNome = (tituloMol.length > 48 || maxToken > 28)
+    ? 'nome-longo nome-extenso'
+    : (tituloMol.length > 26 || maxToken > 17)
+      ? 'nome-longo'
+      : (tituloMol.length > 14 || maxToken > 12)
+        ? 'nome-medio'
+        : '';
   const irmaos = pack.mesma_conectividade || [];
   const irmaos3d = irmaos.filter((x) => x.tem_3d);
   const json3d = tem3d ? JSON.stringify(pack.estruturas_3d) : '';
@@ -144,7 +152,7 @@ export function renderMolecula({ pack, taxonCtx }) {
     </div>
     <header class="mol-cab-cena">
       <p class="mol-registro">${icone('molecula')}${tr('Molécula')} · BMB ${String(pack.id).padStart(5, '0')}</p>
-      <h2 id="painel-titulo" tabindex="-1"${ikNome ? '' : bruto(' translate="no"')} class="${tituloMol.length > 38 ? 'nome-longo' : ''}">${tituloMol}</h2>
+      <h2 id="painel-titulo" tabindex="-1"${ikNome ? '' : bruto(' translate="no"')} class="${classeNome}">${tituloMol}</h2>
       <p class="mol-formula">${pack.formula ? html`<span aria-label="${pack.formula}">${pack.formula.split(/(\d+)/).map((t) => /^\d+$/.test(t) ? html`<sub>${t}</sub>` : t)}</span>` : ''}${massaMono ? html`<span>${fmtFixo(massaMono, 4)} Da</span>` : ''}</p>
       <p class="mol-natureza" data-cena-origem>${tem3d ? tr(estPrim.natureza === 'experimental' ? 'Estrutura experimental' : estPrim.natureza === 'predicao_computacional' ? 'Modelo predito' : 'Confôrmero calculado') : tr('Estrutura 3D indisponível')}</p>
     </header>
@@ -191,7 +199,7 @@ export function renderMolecula({ pack, taxonCtx }) {
     ${estrutura}
     <div class="mol-dossie"><div class="cab-perfil">
       <h3 class="sec-titulo">${tr('Identidade química')}</h3>
-      ${(!ikNome && pack.nome.length > 38) ? html`<p class="quebra-livre" translate="no">${pack.nome}</p>` : ''}
+      ${(!ikNome && pack.nome.length > 34) ? html`<p class="quebra-livre" translate="no">${pack.nome}</p>` : ''}
       ${ikNome ? html`<p class="fonte-linha mono quebra-livre">${pack.nome}</p>` : ''}
       <div class="chips"><span class="badge ind">${icone('molecula')}${tipo}</span>
         ${natureza3d ? html`<span class="badge ${natureza3d[0]}" title="${natureza3d[2]}">${icone('cubo')}${tr(natureza3d[1])}</span>` : ''}

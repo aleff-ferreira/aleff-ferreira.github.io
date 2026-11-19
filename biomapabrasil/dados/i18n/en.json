@@ -1128,6 +1128,7 @@
   "Coordenadas do modelo depositado. A resolução pertence à entrada experimental. A origem de cada hidrogênio pode variar.": "Coordinates from the deposited model. Resolution describes the experimental entry. The origin of individual hydrogen positions can vary.",
   "Arquivo legado. Cargas e atribuições ausentes aparecem sem registro. A estereoquímica anotada no modelo pode ser inferida da geometria.": "Legacy file. Missing charges and assignments are marked unrecorded. Model stereochemistry may be inferred from its geometry.",
   "Modelo de uma molécula isolada. Esta pose não determina sua conformação em solução.": "Isolated molecule model. Its solution conformation is undetermined.",
+  "Estereoisômero 3D representativo calculado para a conectividade registrada; centros sem configuração definida na fonte permanecem sem atribuição.": "Representative computed 3D stereoisomer for the recorded connectivity; stereocenters undefined in the source remain unassigned.",
   "SUB-BACIA HIDROGRÁFICA": "HYDROGRAPHIC SUB-BASIN",
   "Sub-bacia": "Sub-basin",
   "Sub-bacia hidrográfica": "Hydrographic sub-basin",
@@ -1178,5 +1179,8 @@
   "O mapa e os perfis exigem JavaScript. Os dados estão em CSV:": "The map and profiles require JavaScript. Data files are available as CSV:",
   "táxons": "taxa",
   "afirmações": "claims",
-  "Guiana Francesa": "French Guiana"
+  "Guiana Francesa": "French Guiana",
+  "energia MMFF94s": "MMFF94s energy",
+  "estereoisômero representativo": "representative stereoisomer",
+  "resíduos X modelados como Ala": "X residues modeled as Ala"
 }

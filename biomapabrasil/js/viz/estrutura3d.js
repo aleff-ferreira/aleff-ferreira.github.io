@@ -114,6 +114,14 @@ function temaClaro() {
   return raiz.dataset.tema === 'claro' && !raiz.hasAttribute('data-cena-molecular');
 }
 
+function traduzirMetodo3D(met) {
+  if (!met) return '';
+  return String(met)
+    .replace('energia MMFF94s', tr('energia MMFF94s'))
+    .replace('estereoisômero representativo', tr('estereoisômero representativo'))
+    .replace('resíduos X modelados como Ala', tr('resíduos X modelados como Ala'));
+}
+
 // ═══════════════════════ Descompressor RFC-1951 (DEFLATE bruto) + Codec BM32 ═══════════════════════
 function inflateRawJS(src) {
   let bitPos = 0;
@@ -405,6 +413,11 @@ export function gerarSDF3DCliente(modelo, info = {}, molMeta = {}) {
     for (let c = 0; c < cargas.length; c += 8) {
       const fatia = cargas.slice(c, c + 8);
       linhas.push(`M  CHG${padI(fatia.length)}${fatia.map(([idx, q]) => ` ${padI(idx)} ${padI(q)}`).join('')}`);
+    }
+    const rads = Array.isArray(r.rad) ? r.rad : [];
+    for (let c = 0; c < rads.length; c += 8) {
+      const fatia = rads.slice(c, c + 8);
+      linhas.push(`M  RAD${padI(fatia.length)}${fatia.map(([idx, rv]) => ` ${padI(Number(idx) + 1)} ${padI(rv)}`).join('')}`);
     }
     linhas.push('M  END');
   } else {
@@ -1343,7 +1356,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   const fonteAtual = () => {
     const info = opcoes3d[idxAtual];
     return info.natureza === 'experimental' ? tr('Coordenadas medidas') + ' · ' + info.fonte + ' ' + info.acesso
-      : tr('Coordenadas calculadas') + ' · ' + (info.metodo || info.fonte) + (modelo?.raw.rdkit ? ' · RDKit ' + modelo.raw.rdkit : '');
+      : tr('Coordenadas calculadas') + ' · ' + traduzirMetodo3D(info.metodo || info.fonte) + (modelo?.raw.rdkit ? ' · RDKit ' + modelo.raw.rdkit : '');
   };
   function avisarModoSimples() {
     const status = q('[data-render-status]');
@@ -1951,7 +1964,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       const plddt = info.plddt ?? modelo.raw?.plddt;
       badge.className = 'badge alerta';
       badge.textContent = `${tr('Predita')} · ${info.acesso}${plddt ? ` (pLDDT ${fmtDec(plddt)})` : ''}`;
-      texto = tr('Modelo predito por computador ({metodo}), não determinado por experimento.', { metodo: info.metodo || info.fonte });
+      texto = tr('Modelo predito por computador ({metodo}), não determinado por experimento.', { metodo: traduzirMetodo3D(info.metodo || info.fonte) });
     } else {
       const confs = modelo.raw?.conformeros;
       const eKcal = confs?.[indiceConf]?.energia ?? info.energia_kcal_mol ?? modelo.raw?.e_kcal;
@@ -1965,7 +1978,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
       }
       badge.className = 'badge ind';
       badge.textContent = tr('Confôrmero calculado');
-      texto = tr('Confôrmero calculado ({metodo}), não determinado por experimento.', { metodo: info.metodo || modelo.raw?.met || 'RDKit ETKDGv3' })
+      texto = tr('Confôrmero calculado ({metodo}), não determinado por experimento.', { metodo: traduzirMetodo3D(info.metodo || modelo.raw?.met || 'RDKit ETKDGv3') })
         + (eKcal != null ? ` ${tr('Energia: {e} kcal/mol.', { e: fmtDec(eKcal) })}` : '')
         + (boltz ? ` ${tr('ΔE = {de} kcal/mol · peso de Boltzmann a 298,15 K (vácuo MMFF94s): {w}%.', { de: fmtDec(boltz.dE, 2), w: fmtDec(boltz.w, 1) })}` : '');
     }
@@ -2003,6 +2016,7 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
     if (info.fonte === 'cod') return tr('Átomos pesados medidos por cristalografia. Hidrogênios adicionados por RDKit. Medidas envolvendo H incluem posições inferidas.');
     if (info.natureza === 'experimental') return tr('Coordenadas do modelo depositado. A resolução pertence à entrada experimental. A origem de cada hidrogênio pode variar.');
     if (modelo.raw.a) return tr('Arquivo legado. Cargas e atribuições ausentes aparecem sem registro. A estereoquímica anotada no modelo pode ser inferida da geometria.');
+    if (modelo.raw.repr_estereo) return tr('Estereoisômero 3D representativo calculado para a conectividade registrada; centros sem configuração definida na fonte permanecem sem atribuição.');
     return tr('Modelo de uma molécula isolada. Esta pose não determina sua conformação em solução.');
   }
   function listaPropriedades(chave) {

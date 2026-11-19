@@ -508,17 +508,10 @@ kbd {
   fill: var(--logo-verde-claro);
   transition: filter 0.3s var(--ease);
 }
-.marca-logo .marca-biomapa {
-  fill: var(--logo-tinta);
-  transition: fill 0.25s var(--ease);
-}
+.marca-logo .marca-biomapa,
 .marca-logo .marca-brasil {
   fill: var(--logo-tinta);
-  stroke: var(--logo-tinta);
-  stroke-width: 1.35;
-  stroke-linejoin: round;
-  paint-order: stroke fill;
-  transition: fill 0.25s var(--ease), stroke 0.25s var(--ease);
+  transition: fill 0.25s var(--ease);
 }
 .marca:hover .marca-logo {
   transform: translateY(-1px);

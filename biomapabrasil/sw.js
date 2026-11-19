@@ -4,6 +4,7 @@
 // imagens, estruturas e fontes "cache primeiro". Os índices de topo e o dicionário de tradução sempre tentam a rede antes
 // (versão nova dos dados).
 const VERSAO = 'bmb-v26';
+const PREFIXO_CACHE = VERSAO + '-r423';
 const ESQUELETO = [
   './', 'index.html', 'css/app.css', 'css/molecula.css', 'css/campo-molecular.webp', 'manifest.webmanifest', 'icones/icone.svg',
   'js/main.js', 'js/util.js', 'js/dados.js', 'js/mapa.js', 'js/busca.js', 'js/constelacao.js', 'js/perfis.js',
@@ -12,10 +13,10 @@ const ESQUELETO = [
 const LIMITE_DADOS = 600;   // pacotes de táxon e molécula guardados; os mais antigos saem primeiro
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSAO + '-esqueleto').then((c) => c.addAll(ESQUELETO.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(PREFIXO_CACHE + '-esqueleto').then((c) => c.addAll(ESQUELETO.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => !k.startsWith(VERSAO)).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => !k.startsWith(PREFIXO_CACHE)).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 async function aparar(cache) {
@@ -38,7 +39,7 @@ self.addEventListener('fetch', (e) => {
   const intervalo = req.headers.get('Range')?.match(/^bytes=(\d+)-(\d+)$/);
   if (intervalo && /\/dados\/estruturas3d_ensembles\/[^/]+\.zip$/.test(url.pathname)) {
     e.respondWith((async () => {
-      const cache = await caches.open(VERSAO + '-membros3d');
+      const cache = await caches.open(PREFIXO_CACHE + '-membros3d');
       // A chave inclui a assinatura e a posição do membro. A Cache API aceita a cópia completa de cada membro.
       const chave = new URL(url);
       chave.searchParams.set('bytes', intervalo[1] + '-' + intervalo[2]);
@@ -67,22 +68,22 @@ self.addEventListener('fetch', (e) => {
   if (/\/dados\/(indice|indice_mapa|sinonimos_indice|moleculas_indice|inchikeys_indice|manifesto|territorios)\.json$/.test(caminho)
       || /\/dados\/i18n\/.+\.json$/.test(caminho)) {
     // índices e dicionário de tradução: rede primeiro, para acompanharem a versão dos dados já na primeira visita
-    e.respondWith(redeEAtualiza(req, VERSAO + '-dados').catch(() => caches.match(req)));
+    e.respondWith(redeEAtualiza(req, PREFIXO_CACHE + '-dados').catch(() => caches.match(req)));
     return;
   }
   if (/\/dados\/(taxa|moleculas|moleculas_lotes|estruturas_lotes|estruturas3d_lotes|viz|estruturas3d)\/.+\.json$/.test(caminho) || /\/dados\/geo\//.test(caminho)) {
     e.respondWith(caches.match(req).then((c) => {
-      const atualiza = redeEAtualiza(req, VERSAO + '-dados').catch(() => c);
+      const atualiza = redeEAtualiza(req, PREFIXO_CACHE + '-dados').catch(() => c);
       return c || atualiza;                                          // cache primeiro, atualiza em segundo plano
     }));
     return;
   }
   if (/\/dados\/(imagens|estruturas)\//.test(caminho) || /\/fontes\//.test(caminho)) {
-    e.respondWith(caches.match(req).then((c) => c || redeEAtualiza(req, VERSAO + '-midia')));
+    e.respondWith(caches.match(req).then((c) => c || redeEAtualiza(req, PREFIXO_CACHE + '-midia')));
     return;
   }
   // esqueleto (HTML, CSS, JS): usa o cache e atualiza em segundo plano, para que a versão nova chegue na visita seguinte
-  e.respondWith(caches.open(VERSAO + '-esqueleto').then(async (cache) => {
+  e.respondWith(caches.open(PREFIXO_CACHE + '-esqueleto').then(async (cache) => {
     const guardado = await cache.match(req);
     const rede = fetch(req).then((r) => { if (r.ok) cache.put(req, r.clone()); return r; }).catch(() => guardado);
     return guardado || rede;
