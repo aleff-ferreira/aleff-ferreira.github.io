@@ -2495,6 +2495,17 @@ export async function montarVisualizador3D(container, opcoes3d, packConsultas = 
   window.addEventListener('bmb:movimento', atualizarMovimento, opts);
   matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', atualizarMovimento, opts);
   document.addEventListener('visibilitychange', () => pedirQuadro(), opts);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && expandido) {
+      e.preventDefault();
+      expandido = false;
+      raizBloco.classList.remove('lab3d-expandido');
+      const btnExp = container.querySelector('[data-3d="expandir"]');
+      btnExp?.setAttribute('aria-pressed', 'false');
+      btnExp?.focus();
+      pedirQuadro(false);
+    }
+  }, opts);
   cvGl.addEventListener('webglcontextlost', e => {
     e.preventDefault(); clearTimeout(reconstituir); ultimaInteracao = -Infinity;
     motorGL = null; cvGl.hidden = true;

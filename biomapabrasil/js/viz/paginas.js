@@ -21,11 +21,20 @@ function atualizarURL(rota, params) {
 // ═══════════════════════════ espécies ═══════════════════════════
 export function montarEspecies(raiz, { indice, ufs, params, dataDados, recorteMin }) {
   const comCurador = filtroOferecido('curador');
+  const rawG = (params.get('g') || '').trim();
+  const gNorm = rawG ? ({ p: 'P', planta: 'P', plantas: 'P', a: 'A', animal: 'A', f: 'F', fungo: 'F', fungos: 'F' }[rawG.toLowerCase()] || rawG.toUpperCase()) : '';
+  const rawUf = (params.get('uf') || '').trim().toUpperCase();
+  const ufNorm = ufs.some((u) => u.s === rawUf) ? rawUf : '';
+  const rawBacia = (params.get('bacia') || '').trim().toUpperCase();
+  const candBacia = rawBacia ? (rawBacia.startsWith('BAC:') ? rawBacia : `BAC:${rawBacia}`) : '';
+  const baciaNorm = candBacia && (indice.legenda?.bacias?.[candBacia] || indice.lista.some((t) => t.bacias?.[candBacia] != null)) ? candBacia : '';
+  const rawPred = (params.get('pred') || '').trim().toLowerCase();
+  const predNorm = rawPred in PREDOMINIO ? rawPred : '';
   const est = {
-    q: params.get('q') || '', g: params.get('g') || '', uf: params.get('uf') || '', bacia: params.get('bacia') || '',
-    estrato: params.get('estrato') || '', dist: params.get('dist') || '',
+    q: params.get('q') || '', g: gNorm in GRUPOS ? gNorm : '', uf: ufNorm, bacia: baciaNorm,
+    estrato: (params.get('estrato') || '').trim(), dist: (params.get('dist') || '').trim(),
     fora: params.get('fora') === '1', coleta: params.get('coleta') === '1', curador: comCurador && params.get('curador') === '1',
-    pred: params.get('pred') || '', ord: params.get('ord') || 'nome', dir: params.get('dir') || 'asc', vista: params.get('vista') === 'cartoes' ? 'cartoes' : 'tabela',
+    pred: predNorm, ord: params.get('ord') || 'nome', dir: params.get('dir') || 'asc', vista: params.get('vista') === 'cartoes' ? 'cartoes' : 'tabela',
   };
   const opcoesUF = ufs.map((u) => html`<option value="${u.s}" ${est.uf === u.s ? bruto('selected') : ''}>${u.n}</option>`);
   const listaBacias = Object.entries(indice.legenda?.bacias || {}).sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
@@ -171,8 +180,12 @@ export function montarEspecies(raiz, { indice, ufs, params, dataDados, recorteMi
 }
 
 // ═══════════════════════════ moléculas ═══════════════════════════
-export async function montarMoleculas(raiz, { params, dataDados }) {
-  const est = { q: params.get('q') || '', tipo: params.get('tipo') || '', n3d: params.get('n3d') || '', classe: params.get('classe') || '',
+export async function montarMoleculas(raiz, { params, dataDados, signal } = {}) {
+  const rawTipo = (params.get('tipo') || '').trim().toLowerCase();
+  const tipoNorm = { p: 'p', pequena: 'p', pequena_molecula: 'p', t: 't', toxina: 't' }[rawTipo] || '';
+  const rawN3d = (params.get('n3d') || '').trim().toLowerCase();
+  const n3dNorm = ['e', 'p', 'c'].includes(rawN3d) ? rawN3d : '';
+  const est = { q: params.get('q') || '', tipo: tipoNorm, n3d: n3dNorm, classe: params.get('classe') || '',
     ativ: params.get('ativ') === '1', aprov: params.get('aprov') === '1', coleta: params.get('coleta') === '1', p: Math.max(1, Number(params.get('p')) || 1) };
   raiz.innerHTML = html`<div class="pagina"><header>
     <p class="eyebrow">TABELA DE MOLÉCULAS</p>
@@ -182,14 +195,19 @@ export async function montarMoleculas(raiz, { params, dataDados }) {
   let ix;
   try { ix = await dados.indiceMoleculasComIk(); } catch {
     try { ix = await dados.indiceMoleculas(); } catch {
-      raiz.querySelector('#fm-carga').outerHTML = `<div class="erro-estado" role="alert">${tr('Não foi possível carregar a tabela de moléculas. Tente novamente.')}</div>`;
+      if (signal?.aborted || !raiz.isConnected) return;
+      const elErr = raiz.querySelector('#fm-carga');
+      if (elErr) elErr.outerHTML = `<div class="erro-estado" role="alert">${tr('Não foi possível carregar a tabela de moléculas. Tente novamente.')}</div>`;
       return;
     }
   }
+  if (signal?.aborted || !raiz.isConnected) return;
+  const elCarga = raiz.querySelector('#fm-carga');
+  if (!elCarga) return;
   const ROT_3D = { e: 'Experimental (wwPDB ou COD)', p: 'Predita (AlphaFold ou ESMFold)', c: 'Confôrmero calculado (RDKit)' };
   const CURTO_3D = { e: ['ok', 'Experimental'], p: ['alerta', 'Predita'], c: ['ind', 'Confôrmero calculado'] };
   const classes = [...new Set(ix.lista.map((m) => m.classe).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'en'));
-  raiz.querySelector('#fm-carga').outerHTML = html`
+  elCarga.outerHTML = html`
     <form class="filtros" role="search" aria-label="${tr('Filtros da tabela de moléculas')}">
       <label>Buscar<input type="search" id="fm-q" value="${est.q}" placeholder="${tr('nome, BMB 00616, InChIKey, fórmula ou classe')}"></label>
       <label>Tipo<select id="fm-tipo"><option value="">Todos</option>${Object.entries(TIPOS_MOLECULA).map(([k, v]) => html`<option value="${k}" ${est.tipo === k ? bruto('selected') : ''}>${tr(v)}</option>`)}</select></label>

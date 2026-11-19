@@ -19,10 +19,11 @@ const COR_ESTRATO = {
 };
 const LIMITE_CARTOES = 120;
 
-export async function montarFloresta(raiz) {
+export async function montarFloresta(raiz, { signal } = {}) {
   garantirEstilosObservatorio();
   raiz.innerHTML = `<div class="obs-pagina"><p class="carregando" role="status">${esc(tr('Carregando…'))}</p></div>`;
   const fl = await dados.viz('floresta');
+  if (signal?.aborted || !raiz.isConnected) return;
   const estratos = fl.estratos || [];
 
   const mapaCorClasse = new Map();

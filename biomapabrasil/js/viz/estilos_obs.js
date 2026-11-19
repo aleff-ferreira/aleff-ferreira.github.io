@@ -77,7 +77,11 @@ export function garantirEstilosObservatorio() {
     align-items: start;
   }
   @media (max-width: 1024px) {
-    .obs-grade { grid-template-columns: 1fr; }
+    .obs-grade { grid-template-columns: minmax(0, 1fr); }
+  }
+  .obs-palco-card,
+  .obs-painel-lat {
+    min-width: 0;
   }
   .obs-palco-card {
     position: relative;

@@ -3,7 +3,7 @@
 // também. Estratégia pensada para 400 kbps: dados JSON "usa o cache e atualiza em segundo plano";
 // imagens, estruturas e fontes "cache primeiro". Os índices de topo e o dicionário de tradução sempre tentam a rede antes
 // (versão nova dos dados).
-const VERSAO = 'bmb-v25';
+const VERSAO = 'bmb-v26';
 const ESQUELETO = [
   './', 'index.html', 'css/app.css', 'css/molecula.css', 'css/campo-molecular.webp', 'manifest.webmanifest', 'icones/icone.svg',
   'js/main.js', 'js/util.js', 'js/dados.js', 'js/mapa.js', 'js/busca.js', 'js/constelacao.js', 'js/perfis.js',
